@@ -26,10 +26,6 @@ public class DelaunayTerrain : MonoBehaviour {
     public float frequencyBase = 2;
     public float persistence = 1.1f;
 
-    // Detail mesh parameters
-    public Transform detailMesh;
-    public int detailMeshesToGenerate = 50;
-
     // Prefab which is generated for each chunk of the mesh.
     public Transform chunkPrefab = null;
 
@@ -46,6 +42,8 @@ public class DelaunayTerrain : MonoBehaviour {
     public float vertexEdgeMergeDistance = 20;
 
     [SerializeField] bool regenerate = false;
+
+    private List<Vertex> edgeVertices;
 
     void Start()
     {
@@ -99,12 +97,16 @@ public class DelaunayTerrain : MonoBehaviour {
         for (int i = 0; i < randomPoints; i++) {
             polygon.Add(new Vertex(Random.Range(0.0f, xsize), Random.Range(0.0f, ysize)));
         }
+        // Add corner points doubled
+        polygon.Add(new Vertex(0, 0, 1));
+        polygon.Add(new Vertex(0, 300, 1));
+        polygon.Add(new Vertex(300, 0, 1));
+        polygon.Add(new Vertex(300, 300, 1));
 
         TriangleNet.Meshing.ConstraintOptions options = new TriangleNet.Meshing.ConstraintOptions() { ConformingDelaunay = true };
         mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
         
         bin = new TriangleBin(mesh, xsize, ysize, minPointRadius * 2.0f);
-
         for (int i = 0; i < mesh.vertices.Count; i++)
         {
             if (Mathf.Abs((float)mesh.vertices[i].x - xsize) < vertexEdgeMergeDistance)
@@ -154,11 +156,44 @@ public class DelaunayTerrain : MonoBehaviour {
             elevations.Add(elevation * elevationScale);
         }
 
-        MakeMesh();
+        edgeVertices = new List<Vertex>();
+        for (int i = 0; i < mesh.vertices.Count; i++)
+        {
+            if (mesh.vertices[i].label == 1)
+            {
+                edgeVertices.Add(mesh.vertices[i]);
+            }
+        }
 
-        ScatterDetailMeshes();
+        MakeMesh();
+        MakeBase();
     }
-    
+
+    private void MakeBase()
+    {
+        // Find edge vertices separatly for x and z axis
+        // and use those to create meshes
+
+        // Need to change axis on vertexes (x,z)=>(x,y)
+        for (int i = 0; i < edgeVertices.Count; i++)
+        {
+            var point = GetPoint3D(edgeVertices[i].id);
+            edgeVertices[i].y = point.y;
+        }
+        for (int i = 0; i < edgeVertices.Count; i++)
+        {
+            var point = new Vector3((float)edgeVertices[i].x, (float)edgeVertices[i].y, 0);
+            Debug.DrawLine(point, point + (Vector3.up * 30), Color.red, 30);
+        }
+
+        var xPlus = new List<Vertex>();
+
+        for (int i = 0; i < edgeVertices.Count; i++)
+        {
+            if (edgeVertices[i].x == xsize) xPlus.Add(edgeVertices[i]);
+        }
+    }
+
     public void MakeMesh() {
         IEnumerator<Triangle> triangleEnumerator = mesh.Triangles.GetEnumerator();
 
@@ -255,29 +290,6 @@ public class DelaunayTerrain : MonoBehaviour {
         float elevation = p0.y + (normal.x * (p0.x - x) + normal.z * (p0.z - y)) / normal.y;
 
         return elevation;
-    }
-
-    /* Scatters detail meshes within the bounds of the terrain. */
-    public void ScatterDetailMeshes() {
-        for (int i = 0; i < detailMeshesToGenerate; i++)
-        {
-            // Obtain a random position
-            float x = Random.Range(0, xsize);
-            float z = Random.Range(0, ysize);
-            float elevation = GetElevation(x, z);
-            Vector3 position = new Vector3(x, elevation, z);
-
-            if (elevation == float.MinValue) {
-                // Value returned when we couldn't find a triangle, just skip this one
-                continue;
-            }
-
-            // We always want the mesh to remain upright, so only vary the rotation in the x-z plane
-            float angle = Random.Range(0, 360.0f);
-            Quaternion randomRotation = Quaternion.AngleAxis(angle, Vector3.up);
-
-            Instantiate<Transform>(detailMesh, position, randomRotation, this.transform);
-        }
     }
 
 
