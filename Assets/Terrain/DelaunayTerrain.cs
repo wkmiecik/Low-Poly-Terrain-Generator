@@ -48,7 +48,7 @@ public class DelaunayTerrain : MonoBehaviour {
     void Start()
     {
         //transform.position = new Vector3(-xsize/2, 0, -ysize/2);
-        Generate();
+        //Generate();
     }
 
     void Update() {
@@ -175,23 +175,78 @@ public class DelaunayTerrain : MonoBehaviour {
         // and use those to create meshes
 
         // Need to change axis on vertexes (x,z)=>(x,y)
-        for (int i = 0; i < edgeVertices.Count; i++)
-        {
-            var point = GetPoint3D(edgeVertices[i].id);
-            edgeVertices[i].y = point.y;
-        }
-        for (int i = 0; i < edgeVertices.Count; i++)
-        {
-            var point = new Vector3((float)edgeVertices[i].x, (float)edgeVertices[i].y, 0);
-            Debug.DrawLine(point, point + (Vector3.up * 30), Color.red, 30);
-        }
+        Polygon polygon = new Polygon();
+        polygon.Add(new Vertex(-100, 0));
+        polygon.Add(new Vertex(-100, xsize));
 
-        var xPlus = new List<Vertex>();
+        var xVertices = new List<Vertex>();
 
         for (int i = 0; i < edgeVertices.Count; i++)
         {
-            if (edgeVertices[i].x == xsize) xPlus.Add(edgeVertices[i]);
+            if (edgeVertices[i].x == xsize) xVertices.Add(edgeVertices[i]);
         }
+
+        for (int i = 0; i < xVertices.Count; i++)
+        {
+            var point = GetPoint3D(xVertices[i].id);
+            xVertices[i].x = point.y;
+            Debug.Log(xVertices[i].label);
+            polygon.Add(xVertices[i]);
+        }
+
+
+        TriangleNet.Meshing.ConstraintOptions options = new TriangleNet.Meshing.ConstraintOptions() { ConformingDelaunay = false, Convex = false, SegmentSplitting = 2 };
+        var baseMesh = (TriangleNet.Mesh)polygon.Triangulate(options);
+
+        List<Vector3> vertices = new List<Vector3>();
+        List<Vector3> normals = new List<Vector3>();
+        List<Vector2> uvs = new List<Vector2>();
+        List<int> triangles = new List<int>();
+
+        IEnumerator<Triangle> triangleEnumerator = baseMesh.Triangles.GetEnumerator();
+
+        for (int i = 0; i < baseMesh.triangles.Count; i++)
+        {
+            if (!triangleEnumerator.MoveNext())
+            {
+                break;
+            }
+
+            Triangle triangle = triangleEnumerator.Current;
+
+            // For the triangles to be right-side up, they need
+            // to be wound in the opposite direction
+            Vector3 v0 = new Vector3((float)triangle.vertices[2].x, 0, (float)triangle.vertices[2].y);
+            Vector3 v1 = new Vector3((float)triangle.vertices[1].x, 0, (float)triangle.vertices[1].y);
+            Vector3 v2 = new Vector3((float)triangle.vertices[0].x, 0, (float)triangle.vertices[0].y);
+
+            triangles.Add(vertices.Count);
+            triangles.Add(vertices.Count + 1);
+            triangles.Add(vertices.Count + 2);
+
+            vertices.Add(v0);
+            vertices.Add(v1);
+            vertices.Add(v2);
+
+            Vector3 normal = Vector3.Cross(v1 - v0, v2 - v0);
+            normals.Add(normal);
+            normals.Add(normal);
+            normals.Add(normal);
+
+            uvs.Add(new Vector2(0.0f, 0.0f));
+            uvs.Add(new Vector2(0.0f, 0.0f));
+            uvs.Add(new Vector2(0.0f, 0.0f));
+        }
+        Mesh chunkMesh = new Mesh();
+        chunkMesh.vertices = vertices.ToArray();
+        chunkMesh.uv = uvs.ToArray();
+        chunkMesh.triangles = triangles.ToArray();
+        chunkMesh.normals = normals.ToArray();
+
+        Transform chunk = Instantiate<Transform>(chunkPrefab, transform.position, transform.rotation);
+        chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
+        chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
+        chunk.transform.parent = transform;
     }
 
     public void MakeMesh() {
