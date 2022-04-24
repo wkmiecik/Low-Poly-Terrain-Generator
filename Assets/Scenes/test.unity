@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 1413.2637, g: 3953.5605, b: 6910.992, a: 1}
+  m_IndirectSpecularColor: {r: 1412.6377, g: 3956.1602, b: 6922.0273, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -403,20 +403,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc895de1bba1d53498821dc6813cdf5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  seed: 14
+  seed: 1
   xsize: 300
   ysize: 300
-  minPointRadius: 16
+  minPointRadius: 8
   randomPoints: 0
   trianglesInChunk: 20000
-  elevationScale: 250
-  sampleSize: 0.11
-  octaves: 18
-  frequencyBase: 1.27
-  persistence: 1
+  elevationScale: 125
+  sampleSize: 1
+  octaves: 8
+  frequencyBase: 1.4
+  persistence: 1.23
   chunkPrefab: {fileID: 4760822391077712, guid: 00a4cb1aab563c343a0424f38f2ed8f0, type: 3}
+  baseChunkPrefab: {fileID: 4760822391077712, guid: 9bd0244ec0653e3429dd8fdd75747b7b, type: 3}
   vertexMergeSize: 0
-  vertexEdgeMergeDistance: 10
+  vertexEdgeMergeDistance: 0
   regenerate: 0
 --- !u!4 &1491999471
 Transform:

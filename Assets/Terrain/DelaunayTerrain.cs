@@ -2,6 +2,8 @@
 using UnityEngine;
 using TriangleNet.Geometry;
 using TriangleNet.Topology;
+using TriangleNet.Meshing.Algorithm;
+using TriangleNet.Meshing;
 
 public class DelaunayTerrain : MonoBehaviour {
     public int seed = 0;
@@ -28,6 +30,7 @@ public class DelaunayTerrain : MonoBehaviour {
 
     // Prefab which is generated for each chunk of the mesh.
     public Transform chunkPrefab = null;
+    public Transform baseChunkPrefab = null;
 
     // Elevations at each point in the mesh
     private List<float> elevations;
@@ -171,32 +174,37 @@ public class DelaunayTerrain : MonoBehaviour {
 
     private void MakeBase()
     {
-        // Find edge vertices separatly for x and z axis
-        // and use those to create meshes
-
-        // Need to change axis on vertexes (x,z)=>(x,y)
         Polygon polygon = new Polygon();
-        polygon.Add(new Vertex(-100, 0));
-        polygon.Add(new Vertex(-100, xsize));
-
-        var xVertices = new List<Vertex>();
 
         for (int i = 0; i < edgeVertices.Count; i++)
         {
-            if (edgeVertices[i].x == xsize) xVertices.Add(edgeVertices[i]);
+            if (edgeVertices[i].x == xsize)
+            {
+                var point = GetPoint3D(edgeVertices[i].id);
+                var v = new Vertex(point.y, edgeVertices[i].y, 1);
+                polygon.Add(v);
+            }
         }
 
-        for (int i = 0; i < xVertices.Count; i++)
+        polygon.Points.Sort(delegate (Vertex v1, Vertex v2)
         {
-            var point = GetPoint3D(xVertices[i].id);
-            xVertices[i].x = point.y;
-            Debug.Log(xVertices[i].label);
-            polygon.Add(xVertices[i]);
+            if (v1.y > v2.y) return -1;
+            else if (v1.y < v2.y) return 1;
+            else if (v1.x > v2.x) return 1;
+            else if (v1.x < v2.x) return -1;
+            else return 0;
+        });
+        polygon.Add(new Vertex(-100, 0, 1));
+        polygon.Add(new Vertex(-100, xsize, 1));
+
+        for (int i = 0; i < polygon.Points.Count - 1; i++)
+        {
+            polygon.Segments.Add(new Segment(polygon.Points[i], polygon.Points[i+1]));
         }
+        polygon.Segments.Add(new Segment(polygon.Points[0], polygon.Points[polygon.Points.Count - 1]));
 
-
-        TriangleNet.Meshing.ConstraintOptions options = new TriangleNet.Meshing.ConstraintOptions() { ConformingDelaunay = false, Convex = false, SegmentSplitting = 2 };
-        var baseMesh = (TriangleNet.Mesh)polygon.Triangulate(options);
+        var options = new ConstraintOptions() { ConformingDelaunay = false, Convex = false, SegmentSplitting = 0 };
+        TriangleNet.Mesh baseMesh = (TriangleNet.Mesh)polygon.Triangulate(options);
 
         List<Vector3> vertices = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
@@ -216,9 +224,9 @@ public class DelaunayTerrain : MonoBehaviour {
 
             // For the triangles to be right-side up, they need
             // to be wound in the opposite direction
-            Vector3 v0 = new Vector3((float)triangle.vertices[2].x, 0, (float)triangle.vertices[2].y);
+            Vector3 v0 = new Vector3((float)triangle.vertices[0].x, 0, (float)triangle.vertices[0].y);
             Vector3 v1 = new Vector3((float)triangle.vertices[1].x, 0, (float)triangle.vertices[1].y);
-            Vector3 v2 = new Vector3((float)triangle.vertices[0].x, 0, (float)triangle.vertices[0].y);
+            Vector3 v2 = new Vector3((float)triangle.vertices[2].x, 0, (float)triangle.vertices[2].y);
 
             triangles.Add(vertices.Count);
             triangles.Add(vertices.Count + 1);
@@ -243,7 +251,7 @@ public class DelaunayTerrain : MonoBehaviour {
         chunkMesh.triangles = triangles.ToArray();
         chunkMesh.normals = normals.ToArray();
 
-        Transform chunk = Instantiate<Transform>(chunkPrefab, transform.position, transform.rotation);
+        Transform chunk = Instantiate<Transform>(baseChunkPrefab, new Vector3(xsize,0,0), Quaternion.Euler(0, 0, 90));
         chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
         chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
         chunk.transform.parent = transform;
