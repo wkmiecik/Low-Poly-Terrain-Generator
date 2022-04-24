@@ -8,30 +8,74 @@ public class TerrainBase : MonoBehaviour
 {
     public Transform baseChunkPrefab = null;
     [HideInInspector] public List<float> elevations;
+    [HideInInspector] public int xsize = 300;
+    [HideInInspector] public int ysize = 300;
 
-    public void MakeBase(List<Vertex> edgeVertices, int xsize, int ysize)
+    public void MakeBase(List<Vertex> edgeVertices)
     {
-        Polygon polygon = new Polygon();
+        Polygon xPlusPolygon = new Polygon();
+        Polygon xMinusPolygon = new Polygon();
+        Polygon yPlusPolygon = new Polygon();
+        Polygon yMinusPolygon = new Polygon();
 
         for (int i = 0; i < edgeVertices.Count; i++)
         {
             if (edgeVertices[i].x == xsize)
             {
                 var v = new Vertex(elevations[edgeVertices[i].id], edgeVertices[i].y, 1);
-                polygon.Add(v);
+                xPlusPolygon.Add(v);
+            }
+            if (edgeVertices[i].x == 0)
+            {
+                var v = new Vertex(elevations[edgeVertices[i].id], edgeVertices[i].y, 1);
+                xMinusPolygon.Add(v);
+            }
+            if (edgeVertices[i].y == ysize)
+            {
+                var v = new Vertex(edgeVertices[i].x, elevations[edgeVertices[i].id], 1);
+                yPlusPolygon.Add(v);
+            }
+            if (edgeVertices[i].y == 0)
+            {
+                var v = new Vertex(edgeVertices[i].x, elevations[edgeVertices[i].id], 1);
+                yMinusPolygon.Add(v);
             }
         }
 
-        polygon.Points.Sort(delegate (Vertex v1, Vertex v2)
+        var xPlusBase = MakeMeshFromPolygon(xPlusPolygon, new Vector3(xsize, 0, 0), Quaternion.Euler(0, 0, 90), false, false);
+        var xMinusBase = MakeMeshFromPolygon(xMinusPolygon, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 90), true, false);
+        var yPlusBase = MakeMeshFromPolygon(yPlusPolygon, new Vector3(0, 0, ysize), Quaternion.Euler(-90, 0, 0), false, true);
+        var yMinusBase = MakeMeshFromPolygon(yMinusPolygon, new Vector3(0, 0, 0), Quaternion.Euler(-90, 0, 0), true, true);
+    }
+
+    private Transform MakeMeshFromPolygon(Polygon polygon, Vector3 pos, Quaternion rot, bool flip = false, bool yAxis = false)
+    {
+        polygon.Points.Sort((Vertex v1, Vertex v2) =>
         {
-            if (v1.y > v2.y) return -1;
-            else if (v1.y < v2.y) return 1;
-            else if (v1.x > v2.x) return 1;
-            else if (v1.x < v2.x) return -1;
-            else return 0;
+            if (!yAxis)
+            {
+                if (v1.y > v2.y) return -1;
+                else if (v1.y < v2.y) return 1;
+                else return 0;
+            } 
+            else
+            {
+                if (v1.x > v2.x) return 1;
+                else if (v1.x < v2.x) return -1;
+                else return 0;
+            }
         });
-        polygon.Add(new Vertex(-100, 0, 1));
-        polygon.Add(new Vertex(-100, xsize, 1));
+
+        if (!yAxis)
+        {
+            polygon.Add(new Vertex(-100, 0, 1));
+            polygon.Add(new Vertex(-100, ysize, 1));
+        }
+        else
+        {
+            polygon.Add(new Vertex(xsize, -100, 1));
+            polygon.Add(new Vertex(0, -100, 1));
+        }
 
         for (int i = 0; i < polygon.Points.Count - 1; i++)
         {
@@ -39,11 +83,6 @@ public class TerrainBase : MonoBehaviour
         }
         polygon.Segments.Add(new Segment(polygon.Points[0], polygon.Points[polygon.Points.Count - 1]));
 
-        var xPlusBase = MakeMeshFromPolygon(polygon, new Vector3(xsize, 0, 0), Quaternion.Euler(0, 0, 90));
-    }
-
-    private Transform MakeMeshFromPolygon(Polygon polygon, Vector3 pos, Quaternion rot)
-    {
         var options = new ConstraintOptions() { ConformingDelaunay = false, Convex = false, SegmentSplitting = 0 };
         TriangleNet.Mesh baseMesh = (TriangleNet.Mesh)polygon.Triangulate(options);
 
@@ -63,9 +102,9 @@ public class TerrainBase : MonoBehaviour
 
             Triangle triangle = triangleEnumerator.Current;
 
-            Vector3 v0 = new Vector3((float)triangle.vertices[0].x, 0, (float)triangle.vertices[0].y);
+            Vector3 v0 = new Vector3((float)triangle.vertices[flip ? 2 : 0].x, 0, (float)triangle.vertices[flip ? 2 : 0].y);
             Vector3 v1 = new Vector3((float)triangle.vertices[1].x, 0, (float)triangle.vertices[1].y);
-            Vector3 v2 = new Vector3((float)triangle.vertices[2].x, 0, (float)triangle.vertices[2].y);
+            Vector3 v2 = new Vector3((float)triangle.vertices[flip ? 0 : 2].x, 0, (float)triangle.vertices[flip ? 0 : 2].y);
 
             triangles.Add(vertices.Count);
             triangles.Add(vertices.Count + 1);

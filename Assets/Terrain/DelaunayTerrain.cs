@@ -87,9 +87,9 @@ public class DelaunayTerrain : MonoBehaviour {
         }
         // Add corner points doubled
         polygon.Add(new Vertex(0, 0, 1));
-        polygon.Add(new Vertex(0, 300, 1));
-        polygon.Add(new Vertex(300, 0, 1));
-        polygon.Add(new Vertex(300, 300, 1));
+        polygon.Add(new Vertex(0, ysize, 1));
+        polygon.Add(new Vertex(xsize, 0, 1));
+        polygon.Add(new Vertex(xsize, ysize, 1));
 
         ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
         mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
@@ -154,7 +154,9 @@ public class DelaunayTerrain : MonoBehaviour {
 
         MakeMesh();
         terrainBase.elevations = elevations;
-        terrainBase.MakeBase(edgeVertices, xsize, ysize);
+        terrainBase.xsize = xsize;
+        terrainBase.ysize = ysize;
+        terrainBase.MakeBase(edgeVertices);
     }
 
     public void MakeMesh() {
