@@ -8,62 +8,47 @@ using TriangleNet.Meshing;
 public class DelaunayTerrain : MonoBehaviour {
     public int seed = 0;
 
-    // Maximum size of the terrain.
     public int xsize = 50;
     public int ysize = 50;
 
-    // Minimum distance the poisson-disc-sampled points are from each other.
     public float minPointRadius = 4.0f;
 
-    // Number of random points to generate.
     public int randomPoints = 100;
 
-    // Triangles in each chunk.
     public int trianglesInChunk = 20000;
 
-    // Perlin noise parameters
     public float elevationScale = 100.0f;
     public float sampleSize = 1.0f;
     public int octaves = 8;
     public float frequencyBase = 2;
     public float persistence = 1.1f;
 
-    // Prefab which is generated for each chunk of the mesh.
     public Transform chunkPrefab = null;
-    public Transform baseChunkPrefab = null;
 
-    // Elevations at each point in the mesh
     private List<float> elevations;
-    
-    // Fast triangle querier for arbitrary points
-    private TriangleBin bin;
 
-    // The delaunay mesh
-    private TriangleNet.Mesh mesh = null;
+    [HideInInspector] public static TriangleNet.Mesh mesh = null;
 
-    public float vertexMergeSize = 10;
-    public float vertexEdgeMergeDistance = 20;
+    public float vertexMergeSize = 0;
+    public float vertexEdgeMergeDistance = 0;
 
     [SerializeField] bool regenerate = false;
 
-    private List<Vertex> edgeVertices;
+    private static List<Vertex> edgeVertices;
+    TerrainBase terrainBase;
 
-    void Start()
+    private void Start()
     {
-        //transform.position = new Vector3(-xsize/2, 0, -ysize/2);
-        //Generate();
+        terrainBase = GetComponentInChildren<TerrainBase>();
     }
 
     void Update() {
-        // Generate new terrain on E pressed
         if (regenerate) {
             regenerate = false;
-            // Find all chunks and delete them
             GameObject[] chunks = GameObject.FindGameObjectsWithTag("chunk");
             foreach (GameObject chunk in chunks) {
                 Destroy(chunk);
             }
-            // Generate new terrain
             Generate();
         }
     }
@@ -77,7 +62,7 @@ public class DelaunayTerrain : MonoBehaviour {
     }
 
     public virtual void Generate() {
-        UnityEngine.Random.InitState(seed);
+        Random.InitState(seed);
 
         elevations = new List<float>();
 
@@ -106,10 +91,9 @@ public class DelaunayTerrain : MonoBehaviour {
         polygon.Add(new Vertex(300, 0, 1));
         polygon.Add(new Vertex(300, 300, 1));
 
-        TriangleNet.Meshing.ConstraintOptions options = new TriangleNet.Meshing.ConstraintOptions() { ConformingDelaunay = true };
+        ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
         mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
         
-        bin = new TriangleBin(mesh, xsize, ysize, minPointRadius * 2.0f);
         for (int i = 0; i < mesh.vertices.Count; i++)
         {
             if (Mathf.Abs((float)mesh.vertices[i].x - xsize) < vertexEdgeMergeDistance)
@@ -169,92 +153,8 @@ public class DelaunayTerrain : MonoBehaviour {
         }
 
         MakeMesh();
-        MakeBase();
-    }
-
-    private void MakeBase()
-    {
-        Polygon polygon = new Polygon();
-
-        for (int i = 0; i < edgeVertices.Count; i++)
-        {
-            if (edgeVertices[i].x == xsize)
-            {
-                var point = GetPoint3D(edgeVertices[i].id);
-                var v = new Vertex(point.y, edgeVertices[i].y, 1);
-                polygon.Add(v);
-            }
-        }
-
-        polygon.Points.Sort(delegate (Vertex v1, Vertex v2)
-        {
-            if (v1.y > v2.y) return -1;
-            else if (v1.y < v2.y) return 1;
-            else if (v1.x > v2.x) return 1;
-            else if (v1.x < v2.x) return -1;
-            else return 0;
-        });
-        polygon.Add(new Vertex(-100, 0, 1));
-        polygon.Add(new Vertex(-100, xsize, 1));
-
-        for (int i = 0; i < polygon.Points.Count - 1; i++)
-        {
-            polygon.Segments.Add(new Segment(polygon.Points[i], polygon.Points[i+1]));
-        }
-        polygon.Segments.Add(new Segment(polygon.Points[0], polygon.Points[polygon.Points.Count - 1]));
-
-        var options = new ConstraintOptions() { ConformingDelaunay = false, Convex = false, SegmentSplitting = 0 };
-        TriangleNet.Mesh baseMesh = (TriangleNet.Mesh)polygon.Triangulate(options);
-
-        List<Vector3> vertices = new List<Vector3>();
-        List<Vector3> normals = new List<Vector3>();
-        List<Vector2> uvs = new List<Vector2>();
-        List<int> triangles = new List<int>();
-
-        IEnumerator<Triangle> triangleEnumerator = baseMesh.Triangles.GetEnumerator();
-
-        for (int i = 0; i < baseMesh.triangles.Count; i++)
-        {
-            if (!triangleEnumerator.MoveNext())
-            {
-                break;
-            }
-
-            Triangle triangle = triangleEnumerator.Current;
-
-            // For the triangles to be right-side up, they need
-            // to be wound in the opposite direction
-            Vector3 v0 = new Vector3((float)triangle.vertices[0].x, 0, (float)triangle.vertices[0].y);
-            Vector3 v1 = new Vector3((float)triangle.vertices[1].x, 0, (float)triangle.vertices[1].y);
-            Vector3 v2 = new Vector3((float)triangle.vertices[2].x, 0, (float)triangle.vertices[2].y);
-
-            triangles.Add(vertices.Count);
-            triangles.Add(vertices.Count + 1);
-            triangles.Add(vertices.Count + 2);
-
-            vertices.Add(v0);
-            vertices.Add(v1);
-            vertices.Add(v2);
-
-            Vector3 normal = Vector3.Cross(v1 - v0, v2 - v0);
-            normals.Add(normal);
-            normals.Add(normal);
-            normals.Add(normal);
-
-            uvs.Add(new Vector2(0.0f, 0.0f));
-            uvs.Add(new Vector2(0.0f, 0.0f));
-            uvs.Add(new Vector2(0.0f, 0.0f));
-        }
-        Mesh chunkMesh = new Mesh();
-        chunkMesh.vertices = vertices.ToArray();
-        chunkMesh.uv = uvs.ToArray();
-        chunkMesh.triangles = triangles.ToArray();
-        chunkMesh.normals = normals.ToArray();
-
-        Transform chunk = Instantiate<Transform>(baseChunkPrefab, new Vector3(xsize,0,0), Quaternion.Euler(0, 0, 90));
-        chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
-        chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
-        chunk.transform.parent = transform;
+        terrainBase.elevations = elevations;
+        terrainBase.MakeBase(edgeVertices, xsize, ysize);
     }
 
     public void MakeMesh() {
@@ -274,8 +174,6 @@ public class DelaunayTerrain : MonoBehaviour {
 
                 Triangle triangle = triangleEnumerator.Current;
 
-                // For the triangles to be right-side up, they need
-                // to be wound in the opposite direction
                 Vector3 v0 = GetPoint3D(triangle.vertices[2].id);
                 Vector3 v1 = GetPoint3D(triangle.vertices[1].id);
                 Vector3 v2 = GetPoint3D(triangle.vertices[0].id);
@@ -311,67 +209,9 @@ public class DelaunayTerrain : MonoBehaviour {
         }
     }
 
-    /* Returns a point's local coordinates. */
     public Vector3 GetPoint3D(int index) {
         Vertex vertex = mesh.vertices[index];
         float elevation = elevations[index];
         return new Vector3((float)vertex.x, elevation, (float)vertex.y);
     }
-    
-    /* Returns the triangle containing the given point. If no triangle was found, then null is returned.
-       The list will contain exactly three point indices. */
-    public List<int> GetTriangleContainingPoint(Vector2 point) {
-        Triangle triangle = bin.getTriangleForPoint(new Point(point.x, point.y));
-        if (triangle == null) {
-            return null;
-        }
-
-        return new List<int>(new int[] { triangle.vertices[0].id, triangle.vertices[1].id, triangle.vertices[2].id });
-    }
-
-    /* Returns a pretty good approximation of the height at a given point in worldspace */
-    public float GetElevation(float x, float y) {
-        if (x < 0 || x > xsize ||
-                y < 0 || y > ysize) {
-            return 0.0f;
-        }
-
-        Vector2 point = new Vector2(x, y);
-        List<int> triangle = GetTriangleContainingPoint(point);
-
-        if (triangle == null) {
-            // This can happen sometimes because the triangulation does not actually fit entirely within the bounds of the grid;
-            // not great error handling, but let's return an invalid value
-            return float.MinValue;
-        }
-
-        Vector3 p0 = GetPoint3D(triangle[0]);
-        Vector3 p1 = GetPoint3D(triangle[1]);
-        Vector3 p2 = GetPoint3D(triangle[2]);
-
-        Vector3 normal = Vector3.Cross(p0 - p1, p1 - p2).normalized;
-        float elevation = p0.y + (normal.x * (p0.x - x) + normal.z * (p0.z - y)) / normal.y;
-
-        return elevation;
-    }
-
-
-    //public void OnDrawGizmos()
-    //{
-    //    if (mesh == null)
-    //    {
-    //        // Probably in the editor
-    //        return;
-    //    }
-
-    //    Gizmos.color = Color.red;
-    //    foreach (Edge edge in mesh.Edges)
-    //    {
-    //        Vertex v0 = mesh.vertices[edge.P0];
-    //        Vertex v1 = mesh.vertices[edge.P1];
-    //        Vector3 p0 = new Vector3((float)v0.x, 0.0f, (float)v0.y);
-    //        Vector3 p1 = new Vector3((float)v1.x, 0.0f, (float)v1.y);
-    //        Gizmos.DrawLine(p0, p1);
-    //    }
-    //}
 }
