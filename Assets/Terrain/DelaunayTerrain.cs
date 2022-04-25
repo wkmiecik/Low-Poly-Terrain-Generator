@@ -4,6 +4,8 @@ using TriangleNet.Geometry;
 using TriangleNet.Topology;
 using TriangleNet.Meshing.Algorithm;
 using TriangleNet.Meshing;
+using PathCreation;
+using PathCreation.Examples;
 
 public class DelaunayTerrain : MonoBehaviour {
     public int seed = 0;
@@ -36,6 +38,11 @@ public class DelaunayTerrain : MonoBehaviour {
 
     private static List<Vertex> edgeVertices;
     TerrainBase terrainBase;
+
+    [Header("Road")]
+    public RoadMeshCreator roadMeshCreator;
+    public float roadSmoothDistance;
+    public float roadSmoothDistance2;
 
     private void Start()
     {
@@ -93,37 +100,11 @@ public class DelaunayTerrain : MonoBehaviour {
 
         ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
         mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
-        
+
+        // Generating height at every point
         for (int i = 0; i < mesh.vertices.Count; i++)
         {
-            if (Mathf.Abs((float)mesh.vertices[i].x - xsize) < vertexEdgeMergeDistance)
-            {
-                mesh.vertices[i].x = xsize;
-            }
-            if (mesh.vertices[i].x < vertexEdgeMergeDistance)
-            {
-                mesh.vertices[i].x = 0;
-            }
-            if (Mathf.Abs((float)mesh.vertices[i].y - ysize) < vertexEdgeMergeDistance)
-            {
-                mesh.vertices[i].y = xsize;
-            }
-            if (mesh.vertices[i].y < vertexEdgeMergeDistance)
-            {
-                mesh.vertices[i].y = 0;
-            }
-
-            for (int j = i + 1; j < mesh.vertices.Count; j++)
-            {
-                var v1 = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
-                var v2 = new Vector2((float)mesh.vertices[j].x, (float)mesh.vertices[j].y);
-                if (Vector2.Distance(v1, v2) < vertexMergeSize)
-                {
-                    mesh.vertices[j] = mesh.vertices[i];
-                }
-            }
-
-
+            // Base height from perlin noise
             float elevation = 0.0f;
             float amplitude = Mathf.Pow(persistence, octaves);
             float frequency = 1.0f;
@@ -140,9 +121,37 @@ public class DelaunayTerrain : MonoBehaviour {
             }
 
             elevation = elevation / maxVal;
-            elevations.Add(elevation * elevationScale);
+            elevation *= elevationScale;
+
+
+            // Fix height along path
+            VertexPath path = roadMeshCreator.pathCreator.path;
+            var pointsAlongPath = path.GeneratePointsAlongPath(30);
+            foreach (var point in pointsAlongPath)
+            {
+                var Point2Da = new Vector2(point.x, point.z);
+                var Point2Db = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
+                var dist = Vector2.Distance(Point2Da, Point2Db);
+                var roadWidth = roadMeshCreator.roadWidth + minPointRadius + 6;
+                //elevation *= map(dist, 50, roadSmoothDistance, 0, 1);
+
+                if (dist <= roadWidth) elevation = -1;
+                else if (dist > roadWidth && dist < roadSmoothDistance)
+                {
+                    elevation *= map(dist, roadWidth, roadSmoothDistance, 0, 1);
+                    //Debug.Log(elevation);
+                    //Debug.Log((elevation - roadWidth) / (roadWidth + roadSmoothDistance - roadWidth));
+                    //elevation = roadWidth / (roadSmoothDistance - roadWidth);
+                    //elevation *= (elevation - roadWidth) / (roadWidth + roadSmoothDistance - roadWidth);
+                }
+            }
+
+
+            elevations.Add(elevation);
         }
 
+
+        // Collet all vertices on the edge of terrain for generatig base
         edgeVertices = new List<Vertex>();
         for (int i = 0; i < mesh.vertices.Count; i++)
         {
@@ -152,6 +161,8 @@ public class DelaunayTerrain : MonoBehaviour {
             }
         }
 
+
+        // Create actual meshes
         MakeMesh();
         terrainBase.elevations = elevations;
         terrainBase.xsize = xsize;
@@ -204,10 +215,9 @@ public class DelaunayTerrain : MonoBehaviour {
             chunkMesh.triangles = triangles.ToArray();
             chunkMesh.normals = normals.ToArray();
 
-            Transform chunk = Instantiate<Transform>(chunkPrefab, transform.position, transform.rotation);
+            Transform chunk = Instantiate<Transform>(chunkPrefab, transform.position, transform.rotation, transform);
             chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
             chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
-            chunk.transform.parent = transform;
         }
     }
 
@@ -216,4 +226,10 @@ public class DelaunayTerrain : MonoBehaviour {
         float elevation = elevations[index];
         return new Vector3((float)vertex.x, elevation, (float)vertex.y);
     }
+
+    float map(float s, float a1, float a2, float b1, float b2)
+    {
+        return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
+    }
+
 }

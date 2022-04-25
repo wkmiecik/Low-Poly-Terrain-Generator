@@ -129,10 +129,9 @@ public class TerrainBase : MonoBehaviour
         chunkMesh.triangles = triangles.ToArray();
         chunkMesh.normals = normals.ToArray();
 
-        Transform chunk = Instantiate<Transform>(baseChunkPrefab, pos, rot);
+        Transform chunk = Instantiate<Transform>(baseChunkPrefab, pos, rot, transform);
         chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
         chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
-        chunk.transform.parent = transform;
         return chunk;
     }
 }
