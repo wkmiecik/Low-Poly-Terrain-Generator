@@ -1,156 +1,146 @@
 ﻿using System.Collections.Generic;
 using PathCreation.Utility;
 using UnityEngine;
+using PathCreation;
 
-namespace PathCreation.Examples {
-    public class RoadMeshCreator : PathSceneTool {
-        [Header ("Road settings")]
-        public float roadWidth = .4f;
-        [Range (0, 10f)]
-        public float thickness = .15f;
-        public bool flattenSurface;
-        public float heightOffset = 1;
+[ExecuteInEditMode, RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
+public class RoadMeshCreator : MonoBehaviour {
+    [Header("Path")]
+    public PathCreator pathCreator;
 
-        [Header ("Material settings")]
-        public Material roadMaterial;
-        public Material undersideMaterial;
-        public float textureTiling = 1;
+    [Header ("Road settings")]
+    public float roadWidth = .4f;
+    [Range (0, 10f)]
+    public float thickness = .15f;
+    public bool flattenSurface;
+    public float heightOffset = 1;
 
-        [SerializeField, HideInInspector]
-        GameObject meshHolder;
+    [Header ("Material settings")]
+    public Material roadMaterial;
+    public Material undersideMaterial;
+    public float textureTiling = 1;
 
-        MeshFilter meshFilter;
-        MeshRenderer meshRenderer;
-        Mesh mesh;
+    MeshFilter meshFilter;
+    Mesh mesh;
 
-        protected override void PathUpdated () {
-            if (pathCreator != null) {
-                AssignMeshComponents ();
-                AssignMaterials ();
-                CreateRoadMesh ();
-            }
+    public int viewedVertexIndex = 0;
+
+    public bool manualUpdate = false;
+
+    private void Awake()
+    {
+        meshFilter = GetComponent<MeshFilter>();
+        if (mesh == null)
+        {
+            mesh = new Mesh();
         }
+        meshFilter.sharedMesh = mesh;
 
-        void CreateRoadMesh () {
-            Vector3[] verts = new Vector3[path.NumPoints * 8];
-            Vector2[] uvs = new Vector2[verts.Length];
-            Vector3[] normals = new Vector3[verts.Length];
+        pathCreator.InitializeEditorData(true);
+    }
 
-            int numTris = 2 * (path.NumPoints - 1) + ((path.isClosedLoop) ? 2 : 0);
-            int[] roadTriangles = new int[numTris * 3];
-            int[] underRoadTriangles = new int[numTris * 3];
-            int[] sideOfRoadTriangles = new int[numTris * 2 * 3];
+    private void Update()
+    {
+        if (manualUpdate)
+        {
+            manualUpdate = false;
+            UpdateMesh();
+        }
+    }
 
-            int vertIndex = 0;
-            int triIndex = 0;
+    public void UpdateMesh () {
+        CreateRoadMesh ();
+        transform.position = new Vector3(0, heightOffset, 0);
+    }
 
-            // Vertices for the top of the road are layed out:
-            // 0  1
-            // 8  9
-            // and so on... So the triangle map 0,8,1 for example, defines a triangle from top left to bottom left to bottom right.
-            int[] triangleMap = { 0, 8, 1, 1, 8, 9 };
-            int[] sidesTriangleMap = { 4, 6, 14, 12, 4, 14, 5, 15, 7, 13, 15, 5 };
+    void CreateRoadMesh () {
+        Vector3[] verts = new Vector3[(pathCreator.path.NumPoints * 8) + 8];
 
-            bool usePathNormals = !(path.space == PathSpace.xyz && flattenSurface);
+        int numTris = 2 * (pathCreator.path.NumPoints - 1) + ((pathCreator.path.isClosedLoop) ? 2 : 0);
+        int[] roadTriangles = new int[numTris * 3];
+        int[] sideOfRoadTriangles = new int[numTris * 2 * 3];
+        int[] capTriangles = new int[12];
 
-            for (int i = 0; i < path.NumPoints; i++) {
-                Vector3 localUp = (usePathNormals) ? Vector3.Cross (path.GetTangent (i), path.GetNormal (i)) : path.up;
-                Vector3 localRight = (usePathNormals) ? path.GetNormal (i) : Vector3.Cross (localUp, path.GetTangent (i));
+        int vertIndex = 0;
+        int triIndex = 0;
 
-                // Find position to left and right of current path vertex
-                Vector3 vertSideA = path.GetPoint (i) - localRight * Mathf.Abs (roadWidth);
-                Vector3 vertSideB = path.GetPoint (i) + localRight * Mathf.Abs (roadWidth);
+        // Vertices for the top of the road are layed out:
+        // 0  1
+        // 8  9
+        // and so on... So the triangle map 0,8,1 for example, defines a triangle from top left to bottom left to bottom right.
+        int[] triangleMap = { 0, 8, 1, 1, 8, 9 };
+        int[] sidesTriangleMap = { 4, 6, 14, 12, 4, 14, 5, 15, 7, 13, 15, 5 };
 
-                // Add top of road vertices
-                verts[vertIndex + 0] = vertSideA;
-                verts[vertIndex + 1] = vertSideB;
-                // Add bottom of road vertices
-                verts[vertIndex + 2] = vertSideA - localUp * thickness;
-                verts[vertIndex + 3] = vertSideB - localUp * thickness;
+        bool usePathNormals = !(pathCreator.path.space == PathSpace.xyz && flattenSurface);
 
-                // Duplicate vertices to get flat shading for sides of road
-                verts[vertIndex + 4] = verts[vertIndex + 0];
-                verts[vertIndex + 5] = verts[vertIndex + 1];
-                verts[vertIndex + 6] = verts[vertIndex + 2];
-                verts[vertIndex + 7] = verts[vertIndex + 3];
+        for (int i = 0; i < pathCreator.path.NumPoints; i++) {
+            Vector3 localUp = (usePathNormals) ? Vector3.Cross (pathCreator.path.GetTangent (i), pathCreator.path.GetNormal (i)) : pathCreator.path.up;
+            Vector3 localRight = (usePathNormals) ? pathCreator.path.GetNormal (i) : Vector3.Cross (localUp, pathCreator.path.GetTangent (i));
 
-                // Set uv on y axis to path time (0 at start of path, up to 1 at end of path)
-                uvs[vertIndex + 0] = new Vector2 (0, path.times[i]);
-                uvs[vertIndex + 1] = new Vector2 (1, path.times[i]);
+            // Find position to left and right of current path vertex
+            Vector3 vertSideA = pathCreator.path.GetPoint (i) - localRight * Mathf.Abs (roadWidth);
+            Vector3 vertSideB = pathCreator.path.GetPoint (i) + localRight * Mathf.Abs (roadWidth);
 
-                // Top of road normals
-                normals[vertIndex + 0] = localUp;
-                normals[vertIndex + 1] = localUp;
-                // Bottom of road normals
-                normals[vertIndex + 2] = -localUp;
-                normals[vertIndex + 3] = -localUp;
-                // Sides of road normals
-                normals[vertIndex + 4] = -localRight;
-                normals[vertIndex + 5] = localRight;
-                normals[vertIndex + 6] = -localRight;
-                normals[vertIndex + 7] = localRight;
+            // Add top of road vertices
+            verts[vertIndex + 0] = vertSideA;
+            verts[vertIndex + 1] = vertSideB;
+            // Add bottom of road vertices
+            verts[vertIndex + 2] = vertSideA - localUp * thickness;
+            verts[vertIndex + 3] = vertSideB - localUp * thickness;
 
-                // Set triangle indices
-                if (i < path.NumPoints - 1 || path.isClosedLoop) {
-                    for (int j = 0; j < triangleMap.Length; j++) {
-                        roadTriangles[triIndex + j] = (vertIndex + triangleMap[j]) % verts.Length;
-                        // reverse triangle map for under road so that triangles wind the other way and are visible from underneath
-                        underRoadTriangles[triIndex + j] = (vertIndex + triangleMap[triangleMap.Length - 1 - j] + 2) % verts.Length;
-                    }
-                    for (int j = 0; j < sidesTriangleMap.Length; j++) {
-                        sideOfRoadTriangles[triIndex * 2 + j] = (vertIndex + sidesTriangleMap[j]) % verts.Length;
-                    }
+            // Duplicate vertices to get flat shading for sides of road
+            verts[vertIndex + 4] = verts[vertIndex + 0];
+            verts[vertIndex + 5] = verts[vertIndex + 1];
+            verts[vertIndex + 6] = verts[vertIndex + 2];
+            verts[vertIndex + 7] = verts[vertIndex + 3];
 
+            // Set triangle indices
+            if (i < pathCreator.path.NumPoints - 1 || pathCreator.path.isClosedLoop) {
+                for (int j = 0; j < triangleMap.Length; j++) {
+                    roadTriangles[triIndex + j] = (vertIndex + triangleMap[j]) % verts.Length;
                 }
-
-                vertIndex += 8;
-                triIndex += 6;
+                for (int j = 0; j < sidesTriangleMap.Length; j++) {
+                    sideOfRoadTriangles[triIndex * 2 + j] = (vertIndex + sidesTriangleMap[j]) % verts.Length;
+                }
             }
 
-            mesh.Clear ();
-            mesh.vertices = verts;
-            mesh.uv = uvs;
-            mesh.normals = normals;
-            mesh.subMeshCount = 3;
-            mesh.SetTriangles (roadTriangles, 0);
-            mesh.SetTriangles (underRoadTriangles, 1);
-            mesh.SetTriangles (sideOfRoadTriangles, 2);
-            mesh.RecalculateBounds ();
+            vertIndex += 8;
+            triIndex += 6;
         }
 
-        // Add MeshRenderer and MeshFilter components to this gameobject if not already attached
-        void AssignMeshComponents () {
+        // Caps front
+        verts[verts.Length - 1] = verts[0];
+        verts[verts.Length - 2] = verts[1];
+        verts[verts.Length - 3] = verts[2];
+        verts[verts.Length - 4] = verts[3];
+        capTriangles[0] = verts.Length - 2;
+        capTriangles[1] = verts.Length - 3;
+        capTriangles[2] = verts.Length - 1;
+        capTriangles[3] = verts.Length - 4;
+        capTriangles[4] = verts.Length - 3;
+        capTriangles[5] = verts.Length - 2;
 
-            if (meshHolder == null) {
-                meshHolder = new GameObject ("Road Mesh Holder");
-            }
+        // Caps back
+        verts[verts.Length - 5] = verts[verts.Length - 9];
+        verts[verts.Length - 6] = verts[verts.Length - 10];
+        verts[verts.Length - 7] = verts[verts.Length - 11];
+        verts[verts.Length - 8] = verts[verts.Length - 12];
+        capTriangles[6] = verts.Length - 5;
+        capTriangles[7] = verts.Length - 7;
+        capTriangles[8] = verts.Length - 6;
+        capTriangles[9] = verts.Length - 6;
+        capTriangles[10] = verts.Length - 7;
+        capTriangles[11] = verts.Length - 8;
 
-            meshHolder.transform.rotation = Quaternion.identity;
-            meshHolder.transform.position = new Vector3(0, heightOffset, 0);
-            meshHolder.transform.localScale = Vector3.one;
+        //Debug.DrawLine(verts[viewedVertexIndex], verts[viewedVertexIndex] + (Vector3.up * 30), Color.red);
 
-            // Ensure mesh renderer and filter components are assigned
-            if (!meshHolder.gameObject.GetComponent<MeshFilter> ()) {
-                meshHolder.gameObject.AddComponent<MeshFilter> ();
-            }
-            if (!meshHolder.GetComponent<MeshRenderer> ()) {
-                meshHolder.gameObject.AddComponent<MeshRenderer> ();
-            }
-
-            meshRenderer = meshHolder.GetComponent<MeshRenderer> ();
-            meshFilter = meshHolder.GetComponent<MeshFilter> ();
-            if (mesh == null) {
-                mesh = new Mesh ();
-            }
-            meshFilter.sharedMesh = mesh;
-        }
-
-        void AssignMaterials () {
-            if (roadMaterial != null && undersideMaterial != null) {
-                meshRenderer.sharedMaterials = new Material[] { roadMaterial, undersideMaterial, undersideMaterial };
-                meshRenderer.sharedMaterials[0].mainTextureScale = new Vector3 (1, textureTiling);
-            }
-        }
-
+        mesh.Clear ();
+        mesh.vertices = verts;
+        mesh.subMeshCount = 3;
+        mesh.SetTriangles (roadTriangles, 0);
+        mesh.SetTriangles (sideOfRoadTriangles, 2);
+        mesh.SetTriangles (capTriangles, 1);
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds ();
     }
 }

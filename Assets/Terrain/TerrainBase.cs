@@ -83,7 +83,7 @@ public class TerrainBase : MonoBehaviour
         }
         polygon.Segments.Add(new Segment(polygon.Points[0], polygon.Points[polygon.Points.Count - 1]));
 
-        var options = new ConstraintOptions() { ConformingDelaunay = false, Convex = false, SegmentSplitting = 0 };
+        var options = new ConstraintOptions() { ConformingDelaunay = true };
         TriangleNet.Mesh baseMesh = (TriangleNet.Mesh)polygon.Triangulate(options);
 
         List<Vector3> vertices = new List<Vector3>();

@@ -42,11 +42,13 @@ public class DelaunayTerrain : MonoBehaviour {
     [Header("Road")]
     public RoadMeshCreator roadMeshCreator;
     public float roadSmoothDistance;
-    public float roadSmoothDistance2;
+    [Range(0,1f)]
+    public float smoothMinValue;
 
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
+        Generate();
     }
 
     void Update() {
@@ -82,6 +84,18 @@ public class DelaunayTerrain : MonoBehaviour {
         PoissonDiscSampler sampler = new PoissonDiscSampler(xsize, ysize, minPointRadius);
 
         Polygon polygon = new Polygon();
+
+        // Randomise path
+        // Edge point
+        roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(Random.Range(30, xsize - 30), 0, ysize - 0.2f), true);
+        roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(Random.Range(30, xsize - 30), 0, 0.2f), true);
+        // Middle point and its handles
+        var handle = new Vector3(Random.Range(10, xsize - 10), 0, Random.Range((ysize/2) + 10, ysize));
+        roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);
+        roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(xsize / 2, 0, ysize / 2), true);
+        // Update road mesh
+        roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
+        roadMeshCreator.UpdateMesh();
 
         // Add uniformly-spaced points
         foreach (Vector2 sample in sampler.Samples()) {
@@ -125,24 +139,18 @@ public class DelaunayTerrain : MonoBehaviour {
 
 
             // Fix height along path
-            VertexPath path = roadMeshCreator.pathCreator.path;
-            var pointsAlongPath = path.GeneratePointsAlongPath(30);
+            var pointsAlongPath = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
             foreach (var point in pointsAlongPath)
             {
                 var Point2Da = new Vector2(point.x, point.z);
                 var Point2Db = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
                 var dist = Vector2.Distance(Point2Da, Point2Db);
                 var roadWidth = roadMeshCreator.roadWidth + minPointRadius + 6;
-                //elevation *= map(dist, 50, roadSmoothDistance, 0, 1);
 
                 if (dist <= roadWidth) elevation = -1;
                 else if (dist > roadWidth && dist < roadSmoothDistance)
                 {
-                    elevation *= map(dist, roadWidth, roadSmoothDistance, 0, 1);
-                    //Debug.Log(elevation);
-                    //Debug.Log((elevation - roadWidth) / (roadWidth + roadSmoothDistance - roadWidth));
-                    //elevation = roadWidth / (roadSmoothDistance - roadWidth);
-                    //elevation *= (elevation - roadWidth) / (roadWidth + roadSmoothDistance - roadWidth);
+                    elevation *= map(dist, roadWidth, roadSmoothDistance, smoothMinValue, 1);
                 }
             }
 
