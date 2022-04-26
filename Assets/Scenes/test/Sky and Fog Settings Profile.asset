@@ -17,14 +17,14 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0
   skyIntensityMode:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   exposure:
-    m_OverrideState: 1
-    m_Value: 0.51
-  multiplier:
     m_OverrideState: 0
-    m_Value: 1
+    m_Value: 0.89
+  multiplier:
+    m_OverrideState: 1
+    m_Value: 233.6
   upperHemisphereLuxValue:
     m_OverrideState: 0
     m_Value: 1
@@ -87,10 +87,10 @@ MonoBehaviour:
     m_Value: 0
   numberOfBounces:
     m_OverrideState: 1
-    m_Value: 4
+    m_Value: 8
   groundTint:
     m_OverrideState: 1
-    m_Value: {r: 0.099012084, g: 0.37181917, b: 0.8396226, a: 1}
+    m_Value: {r: 0.0047169924, g: 0.37334034, b: 1, a: 1}
   groundColorTexture:
     m_OverrideState: 0
     m_Value: {fileID: 0}
@@ -250,8 +250,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   fixedExposure:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 15
   compensation:
     m_OverrideState: 0
     m_Value: 0
@@ -399,7 +399,7 @@ MonoBehaviour:
     m_Value: 1
   tracing:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2
   rayMiss:
     m_OverrideState: 1
     m_Value: 1
@@ -433,13 +433,13 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 4294967295
   textureLodBias:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 7
   m_RayLength:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 50
   m_ClampValue:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   mode:
     m_OverrideState: 1
@@ -448,28 +448,28 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0
   sampleCount:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 2
   bounceCount:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   m_Denoise:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   m_HalfResolutionDenoiser:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   m_DenoiserRadius:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.6
   m_SecondDenoiserPass:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   m_MaxMixedRaySteps:
     m_OverrideState: 0
     m_Value: 48
   receiverMotionRejection:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
 --- !u!114 &11400000
 MonoBehaviour:
@@ -513,7 +513,7 @@ MonoBehaviour:
     m_Value: 4
   cloudType:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   skyAmbientMode:
     m_OverrideState: 1
     m_Value: 1

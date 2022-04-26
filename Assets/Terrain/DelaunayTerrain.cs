@@ -45,6 +45,10 @@ public class DelaunayTerrain : MonoBehaviour {
     [Range(0,1f)]
     public float smoothMinValue;
 
+    [Header("Generation steps")]
+    public bool generateBase = true;
+    public bool generateRoad = true;
+
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
@@ -82,20 +86,29 @@ public class DelaunayTerrain : MonoBehaviour {
         }
         
         PoissonDiscSampler sampler = new PoissonDiscSampler(xsize, ysize, minPointRadius);
-
         Polygon polygon = new Polygon();
 
+
         // Randomise path
-        // Edge point
-        roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(Random.Range(30, xsize - 30), 0, ysize - 0.2f), true);
-        roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(Random.Range(30, xsize - 30), 0, 0.2f), true);
-        // Middle point and its handles
-        var handle = new Vector3(Random.Range(10, xsize - 10), 0, Random.Range((ysize/2) + 10, ysize));
-        roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);
-        roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(xsize / 2, 0, ysize / 2), true);
-        // Update road mesh
-        roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
-        roadMeshCreator.UpdateMesh();
+        if (generateRoad)
+        {
+            roadMeshCreator.gameObject.SetActive(true);
+            // Edge point
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(Random.Range(30, xsize - 30), 0, ysize - 0.2f), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(Random.Range(30, xsize - 30), 0, 0.2f), true);
+            // Middle point and its handles
+            var handle = new Vector3(Random.Range(10, xsize - 10), 0, Random.Range((ysize / 2) + 10, ysize));
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(xsize / 2, 0, ysize / 2), true);
+            // Update road mesh
+            roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
+            roadMeshCreator.UpdateMesh();
+        } 
+        else
+        {
+            roadMeshCreator.gameObject.SetActive(false);
+        }
+
 
         // Add uniformly-spaced points
         foreach (Vector2 sample in sampler.Samples()) {
@@ -170,12 +183,17 @@ public class DelaunayTerrain : MonoBehaviour {
         }
 
 
-        // Create actual meshes
+        // Make terrain mesh
         MakeMesh();
-        terrainBase.elevations = elevations;
-        terrainBase.xsize = xsize;
-        terrainBase.ysize = ysize;
-        terrainBase.MakeBase(edgeVertices);
+
+        // Make base meshes
+        if (generateBase)
+        {
+            terrainBase.elevations = elevations;
+            terrainBase.xsize = xsize;
+            terrainBase.ysize = ysize;
+            terrainBase.MakeBase(edgeVertices);
+        }
     }
 
     public void MakeMesh() {

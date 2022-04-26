@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 10615.316, g: 14470.762, b: 19032.61, a: 1}
+  m_IndirectSpecularColor: {r: 534.8065, g: 1833.166, b: 2646.6465, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -123,7 +123,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!43 &669570175
+--- !u!43 &1212480922
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -618,7 +618,7 @@ MonoBehaviour:
   seed: 1
   xsize: 300
   ysize: 300
-  minPointRadius: 8
+  minPointRadius: 9
   randomPoints: 0
   trianglesInChunk: 20000
   elevationScale: 90
@@ -633,6 +633,8 @@ MonoBehaviour:
   roadMeshCreator: {fileID: 1832356281}
   roadSmoothDistance: 50
   smoothMinValue: 0.58
+  generateBase: 1
+  generateRoad: 1
 --- !u!4 &1491999471
 Transform:
   m_ObjectHideFlags: 0
@@ -769,7 +771,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832356277}
-  m_Mesh: {fileID: 669570175}
+  m_Mesh: {fileID: 1212480922}
 --- !u!4 &1832356280
 Transform:
   m_ObjectHideFlags: 0
@@ -801,7 +803,7 @@ MonoBehaviour:
   roadWidth: 5.5
   thickness: 3
   flattenSurface: 0
-  heightOffset: 1
+  heightOffset: 0.1
   roadMaterial: {fileID: 2100000, guid: b5df4735192845740bd11076dc9cdc99, type: 2}
   undersideMaterial: {fileID: 2100000, guid: c1d8d882244c5344fa86a8fd23246f81, type: 2}
   textureTiling: 1
@@ -843,7 +845,7 @@ MonoBehaviour:
       - 0
       globalNormalsAngle: 0
       flipNormals: 0
-    vertexPathUpToDate: 1
+    vertexPathUpToDate: 0
     vertexPathMaxAngleError: 2.8
     vertexPathMinVertexSpacing: 0
     showTransformTool: 0
@@ -986,7 +988,7 @@ Light:
   m_LightShadowCasterMode: 2
   m_AreaSize: {x: 0.5, y: 0.5}
   m_BounceIntensity: 1
-  m_ColorTemperature: 6570
+  m_ColorTemperature: 5524
   m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
@@ -1000,14 +1002,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132366647}
-  m_LocalRotation: {x: -0.42420253, y: 0.14822933, z: -0.070606515, w: -0.89055884}
+  m_LocalRotation: {x: -0.93145174, y: -0.051803175, z: 0.32892996, w: -0.14669433}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50.94, y: -378.9, z: 0}
+  m_LocalEulerAnglesHint: {x: 162.1, y: -321.1, z: 0}
 --- !u!114 &2132366650
 MonoBehaviour:
   m_ObjectHideFlags: 0
