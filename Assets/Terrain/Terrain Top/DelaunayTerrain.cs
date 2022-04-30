@@ -5,6 +5,7 @@ using TriangleNet.Topology;
 using TriangleNet.Meshing;
 
 public class DelaunayTerrain : MonoBehaviour {
+    [Header("Terrain")]
     public int seed = 0;
 
     public int xsize = 50;
@@ -36,29 +37,49 @@ public class DelaunayTerrain : MonoBehaviour {
     private static List<Vertex> edgeVertices;
     TerrainBase terrainBase;
 
+
     [Header("Road")]
     public RoadMeshCreator roadMeshCreator;
     public float roadSmoothDistance;
     [Range(0,1f)]
     public float smoothMinValue;
 
+
+    [Header("Trees")]
+    public float treeMinPointRadius = 17;
+    public float distanceFromEdges = 10;
+    private TreesSpawner treesSpawner;
+
+
     [Header("Generation steps")]
     public bool generateBase = true;
     public bool generateRoad = true;
+    public bool generateTrees = true;
 
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
+        treesSpawner = GetComponentInChildren<TreesSpawner>();
         Generate();
     }
 
     void Update() {
         if (regenerate) {
             regenerate = false;
+
+            StopAllCoroutines();
+
             GameObject[] chunks = GameObject.FindGameObjectsWithTag("chunk");
             foreach (GameObject chunk in chunks) {
                 Destroy(chunk);
             }
+
+            GameObject[] trees = GameObject.FindGameObjectsWithTag("tree");
+            foreach (GameObject tree in trees)
+            {
+                Destroy(tree);
+            }
+
             Generate();
         }
     }
@@ -104,6 +125,8 @@ public class DelaunayTerrain : MonoBehaviour {
         {
             roadMeshCreator.gameObject.SetActive(false);
         }
+        // Generate points spaced along path
+        var pointsAlongPath = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
 
 
         //Add uniformly-spaced points
@@ -151,7 +174,6 @@ public class DelaunayTerrain : MonoBehaviour {
             // Fix height along path
             if (generateRoad)
             {
-                var pointsAlongPath = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
                 foreach (var point in pointsAlongPath)
                 {
                     var Point2Da = new Vector2(point.x, point.z);
@@ -166,7 +188,6 @@ public class DelaunayTerrain : MonoBehaviour {
                     }
                 }
             }
-
 
             elevations.Add(elevation);
         }
@@ -193,6 +214,13 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.xsize = xsize;
             terrainBase.ysize = ysize;
             terrainBase.MakeBase(edgeVertices);
+        }
+
+
+        // Spawn trees
+        if (generateTrees)
+        {
+            StartCoroutine(treesSpawner.Generate(xsize, ysize, treeMinPointRadius, distanceFromEdges, pointsAlongPath, roadMeshCreator.roadWidth + minPointRadius + 6));
         }
     }
 

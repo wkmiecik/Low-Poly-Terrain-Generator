@@ -75,7 +75,7 @@ MonoBehaviour:
     m_Value: 55261.973
   aerosolDensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.05
   aerosolTint:
     m_OverrideState: 1
     m_Value: {r: 0.9, g: 0.9, b: 0.9, a: 1}
@@ -146,7 +146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32b6af8f7ad32324cb6941c3290e5895, type: 3}
   m_Name: MicroShadowing
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   enable:
     m_OverrideState: 1
     m_Value: 1
@@ -258,7 +258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56b145d2b9ee1ac4f846968484e7485a, type: 3}
   m_Name: ContactShadows
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   quality:
     m_OverrideState: 0
     m_Value: 1
@@ -461,13 +461,13 @@ MonoBehaviour:
   active: 0
   quality:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 2
   enable:
     m_OverrideState: 1
     m_Value: 1
   tracing:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 4
   rayMiss:
     m_OverrideState: 1
     m_Value: 1
@@ -508,13 +508,13 @@ MonoBehaviour:
     m_Value: 50
   m_ClampValue:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 5
   mode:
     m_OverrideState: 1
     m_Value: 2
   m_FullResolution:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 1
   sampleCount:
     m_OverrideState: 1
     m_Value: 2
@@ -529,13 +529,13 @@ MonoBehaviour:
     m_Value: 0
   m_DenoiserRadius:
     m_OverrideState: 1
-    m_Value: 0.6
+    m_Value: 1
   m_SecondDenoiserPass:
     m_OverrideState: 1
     m_Value: 1
   m_MaxMixedRaySteps:
-    m_OverrideState: 0
-    m_Value: 48
+    m_OverrideState: 1
+    m_Value: 64
   receiverMotionRejection:
     m_OverrideState: 1
     m_Value: 1
@@ -789,7 +789,7 @@ MonoBehaviour:
     m_Value: 2
   rayTracing:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   intensity:
     m_OverrideState: 1
     m_Value: 1

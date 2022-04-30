@@ -22,6 +22,7 @@ public class RoadMeshCreator : MonoBehaviour
     public float textureTiling = 1;
 
     MeshFilter meshFilter;
+    MeshRenderer meshRenderer;
     Mesh mesh;
 
     public int viewedVertexIndex = 0;
@@ -36,6 +37,7 @@ public class RoadMeshCreator : MonoBehaviour
             mesh = new Mesh();
         }
         meshFilter.sharedMesh = mesh;
+        meshRenderer = GetComponent<MeshRenderer>();
 
         pathCreator.InitializeEditorData(true);
     }
@@ -46,6 +48,15 @@ public class RoadMeshCreator : MonoBehaviour
         {
             manualUpdate = false;
             UpdateMesh();
+        }
+
+        if (Application.isPlaying)
+        {
+            meshRenderer.enabled = true;
+        }
+        else
+        {
+            meshRenderer.enabled = false;
         }
     }
 
