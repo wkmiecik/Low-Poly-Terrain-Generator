@@ -91,7 +91,7 @@ MonoBehaviour:
       cachedPunctualLightShadowAtlas: 2048
       cachedAreaLightShadowAtlas: 1024
       shadowResolutionDirectional:
-        m_Values: 00010000000200000004000000080000
+        m_Values: 00020000000400000008000000100000
         m_SchemaId:
           m_Id: With4Levels
       shadowResolutionPunctual:

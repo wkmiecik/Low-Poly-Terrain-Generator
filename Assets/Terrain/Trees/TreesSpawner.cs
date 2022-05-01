@@ -28,7 +28,7 @@ public class TreesSpawner : MonoBehaviour
 
                 foreach (var point in pointsToAvoid)
                 {
-                    if ((pos - point).sqrMagnitude <= pointsAvoidDistance * pointsAvoidDistance)
+                    if ((hit.point - point).sqrMagnitude <= pointsAvoidDistance * pointsAvoidDistance)
                     {
                         spawn = false;
                     }
