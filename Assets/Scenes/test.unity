@@ -123,7 +123,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!43 &906757507
+--- !u!43 &425020499
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -583,13 +583,42 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   treePrefabs:
-  - {fileID: 8541084173736842124, guid: 158e54f4face7214abc9dd5e01c5ddf4, type: 3}
-  - {fileID: 3184640705049792372, guid: 73c21c4432f1d1a4cbe7b5928021aaea, type: 3}
-  - {fileID: 4339459046667036427, guid: c94eae904343ee541b77c975cfe3554c, type: 3}
-  - {fileID: 7676668832096101788, guid: 00446d353f54cf44d98958bed0543bd4, type: 3}
-  - {fileID: 8483242953534521282, guid: eaebda974ae2d064ca7a6244913ffa63, type: 3}
-  - {fileID: 4971300238018143297, guid: d1d8dc3335b5d5d45ad6528a8eedbbc1, type: 3}
-  - {fileID: 6164471423259896010, guid: 3c8e6d3b6c3a77e429bcd3b335aaa75c, type: 3}
+  - {fileID: 364145594977757287, guid: 158e54f4face7214abc9dd5e01c5ddf4, type: 3}
+  - {fileID: 461994602790089109, guid: 73c21c4432f1d1a4cbe7b5928021aaea, type: 3}
+  - {fileID: 6221902595279923078, guid: c94eae904343ee541b77c975cfe3554c, type: 3}
+  - {fileID: 2028035501418710737, guid: 00446d353f54cf44d98958bed0543bd4, type: 3}
+  - {fileID: 6802582551665254414, guid: eaebda974ae2d064ca7a6244913ffa63, type: 3}
+  - {fileID: 7273547932672064742, guid: d1d8dc3335b5d5d45ad6528a8eedbbc1, type: 3}
+  - {fileID: 7864573956295717652, guid: 3c8e6d3b6c3a77e429bcd3b335aaa75c, type: 3}
+  gradient:
+    serializedVersion: 2
+    key0: {r: 0.8509804, g: 0.79594976, b: 0.3215686, a: 1}
+    key1: {r: 0.85, g: 0.5750435, b: 0.323, a: 1}
+    key2: {r: 0.85490197, g: 0.46867034, b: 0.3215687, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 32189
+    ctime2: 65535
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 2
 --- !u!1 &1382014475
 GameObject:
   m_ObjectHideFlags: 0
@@ -670,7 +699,7 @@ MonoBehaviour:
   seed: 1
   xsize: 300
   ysize: 300
-  minPointRadius: 9
+  minPointRadius: 13
   randomPoints: 0
   trianglesInChunk: 20000
   elevationScale: 90
@@ -827,7 +856,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832356277}
-  m_Mesh: {fileID: 906757507}
+  m_Mesh: {fileID: 425020499}
 --- !u!4 &1832356280
 Transform:
   m_ObjectHideFlags: 0

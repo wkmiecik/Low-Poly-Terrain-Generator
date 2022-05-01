@@ -3,6 +3,7 @@ using UnityEngine;
 using TriangleNet.Geometry;
 using TriangleNet.Topology;
 using TriangleNet.Meshing;
+using DG.Tweening;
 
 public class DelaunayTerrain : MonoBehaviour {
     [Header("Terrain")]
@@ -68,6 +69,7 @@ public class DelaunayTerrain : MonoBehaviour {
             regenerate = false;
 
             StopAllCoroutines();
+            DOTween.Clear();
 
             GameObject[] chunks = GameObject.FindGameObjectsWithTag("chunk");
             foreach (GameObject chunk in chunks) {
@@ -111,8 +113,8 @@ public class DelaunayTerrain : MonoBehaviour {
         {
             roadMeshCreator.gameObject.SetActive(true);
             // Edge point
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(Random.Range(30, xsize - 30), 0, ysize - 0.2f), true);
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(Random.Range(30, xsize - 30), 0, 0.2f), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(Random.Range(30, xsize - 30), 0, ysize - 0.015f), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(Random.Range(30, xsize - 30), 0, 0.015f), true);
             // Middle point and its handles
             var handle = new Vector3(Random.Range(10, xsize - 10), 0, Random.Range((ysize / 2) + 10, ysize));
             roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);

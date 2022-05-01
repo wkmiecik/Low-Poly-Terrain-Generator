@@ -68,13 +68,13 @@ public class TerrainBase : MonoBehaviour
 
         if (!yAxis)
         {
-            polygon.Add(new Vertex(-100, 0, 1));
-            polygon.Add(new Vertex(-100, ysize, 1));
+            polygon.Add(new Vertex(-60, 0, 1));
+            polygon.Add(new Vertex(-60, ysize, 1));
         }
         else
         {
-            polygon.Add(new Vertex(xsize, -100, 1));
-            polygon.Add(new Vertex(0, -100, 1));
+            polygon.Add(new Vertex(xsize, -60, 1));
+            polygon.Add(new Vertex(0, -60, 1));
         }
 
         for (int i = 0; i < polygon.Points.Count - 1; i++)
