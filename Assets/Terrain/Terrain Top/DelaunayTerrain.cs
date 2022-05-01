@@ -109,6 +109,7 @@ public class DelaunayTerrain : MonoBehaviour {
 
 
         // Randomise path
+        var pointsAlongPath = new List<Vector3>();
         if (generateRoad)
         {
             roadMeshCreator.gameObject.SetActive(true);
@@ -122,13 +123,14 @@ public class DelaunayTerrain : MonoBehaviour {
             // Update road mesh
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
             roadMeshCreator.UpdateMesh();
+
+            // Generate points spaced along path
+            pointsAlongPath = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
         } 
         else
         {
             roadMeshCreator.gameObject.SetActive(false);
         }
-        // Generate points spaced along path
-        var pointsAlongPath = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
 
 
         //Add uniformly-spaced points
