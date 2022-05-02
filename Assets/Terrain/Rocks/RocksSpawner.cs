@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-public class TreesSpawner : MonoBehaviour
+public class RocksSpawner : MonoBehaviour
 {
-    public List<GameObject> treePrefabs;
+    public List<GameObject> rockPrefabs;
     public Gradient gradient;
 
     public IEnumerator Generate(float xsize, float ysize, float minPointRadius, float distanceFromEdges, List<Vector3> pointsToAvoid, float pointsAvoidDistance)
@@ -19,8 +19,8 @@ public class TreesSpawner : MonoBehaviour
         {
             if (i % Mathf.CeilToInt(400 * Time.deltaTime) == 0) yield return null;
 
-            var prefab = treePrefabs[Random.Range(0, treePrefabs.Count)];
-            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges/2, 50, samples[i].y + distanceFromEdges/2);
+            var prefab = rockPrefabs[Random.Range(0, rockPrefabs.Count)];
+            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 50, samples[i].y + distanceFromEdges / 2);
 
             if (Physics.Raycast(rayStartPos, -Vector3.up, out hit))
             {
@@ -34,12 +34,7 @@ public class TreesSpawner : MonoBehaviour
                     }
                 }
 
-                if (hit.normal.y < .8f) spawn = false;
-
-                if (spawn) 
-                { 
-                    SpawnTree(prefab, hit.point); 
-                }
+                if (spawn) SpawnTree(prefab, hit.point);
             }
         }
     }
@@ -47,8 +42,8 @@ public class TreesSpawner : MonoBehaviour
 
     private void SpawnTree(GameObject prefab, Vector3 pos)
     {
-        var rot = Quaternion.Euler(Random.Range(-5, 5), Random.Range(0, 360), Random.Range(-5, 5));
-        var scale = new Vector3(1 + Random.Range(0.1f, 0.4f), 1 + Random.Range(0.1f, 0.4f), 1 + Random.Range(0.1f, 0.4f));
+        var rot = Quaternion.Euler(Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360));
+        var scale = new Vector3(1 + Random.Range(0.5f, 2f), 1 + Random.Range(0.5f, 2), 1 + Random.Range(0.5f, 2f));
 
         var obj = Instantiate(prefab, pos, rot);
         obj.transform.parent = transform;

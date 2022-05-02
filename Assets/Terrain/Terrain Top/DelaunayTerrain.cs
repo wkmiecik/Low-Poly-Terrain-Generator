@@ -45,22 +45,28 @@ public class DelaunayTerrain : MonoBehaviour {
     [Range(0,1f)]
     public float smoothMinValue;
 
-
     [Header("Trees")]
     public float treeMinPointRadius = 17;
-    public float distanceFromEdges = 10;
+    public float treeDistanceFromEdges = 5;
     private TreesSpawner treesSpawner;
+
+    [Header("Trees")]
+    public float rockMinPointRadius = 17;
+    public float rockDistanceFromEdges = 3;
+    private RocksSpawner rocksSpawner;
 
 
     [Header("Generation steps")]
     public bool generateBase = true;
     public bool generateRoad = true;
     public bool generateTrees = true;
+    public bool generateRocks = true;
 
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
         treesSpawner = GetComponentInChildren<TreesSpawner>();
+        rocksSpawner = GetComponentInChildren<RocksSpawner>();
         Generate();
     }
 
@@ -71,15 +77,24 @@ public class DelaunayTerrain : MonoBehaviour {
             StopAllCoroutines();
             DOTween.Clear();
 
+            // Delete terrain
             GameObject[] chunks = GameObject.FindGameObjectsWithTag("chunk");
             foreach (GameObject chunk in chunks) {
                 Destroy(chunk);
             }
 
+            // Delete trees
             GameObject[] trees = GameObject.FindGameObjectsWithTag("tree");
             foreach (GameObject tree in trees)
             {
                 Destroy(tree);
+            }
+
+            // Delete rocks
+            GameObject[] rocks = GameObject.FindGameObjectsWithTag("rock");
+            foreach (GameObject rock in rocks)
+            {
+                Destroy(rock);
             }
 
             Generate();
@@ -220,11 +235,16 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.MakeBase(edgeVertices);
         }
 
-
         // Spawn trees
         if (generateTrees)
         {
-            StartCoroutine(treesSpawner.Generate(xsize, ysize, treeMinPointRadius, distanceFromEdges, pointsAlongPath, roadMeshCreator.roadWidth + minPointRadius + 6));
+            StartCoroutine(treesSpawner.Generate(xsize, ysize, treeMinPointRadius, treeDistanceFromEdges, pointsAlongPath, roadMeshCreator.roadWidth + minPointRadius + 6));
+        }
+
+        // Spawn rocks
+        if (generateRocks)
+        {
+            StartCoroutine(rocksSpawner.Generate(xsize, ysize, rockMinPointRadius, rockDistanceFromEdges, pointsAlongPath, roadMeshCreator.roadWidth + 4));
         }
     }
 
