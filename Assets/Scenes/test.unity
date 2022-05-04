@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 5529.4824, g: 10521.68, b: 12319.391, a: 1}
+  m_IndirectSpecularColor: {r: 4987.872, g: 8153.617, b: 6704.2812, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -685,8 +685,8 @@ MonoBehaviour:
   generateBase: 1
   generateRoad: 1
   generateHouse: 1
-  generateRocks: 0
-  generateTrees: 0
+  generateRocks: 1
+  generateTrees: 1
 --- !u!4 &1491999471
 Transform:
   m_ObjectHideFlags: 0
@@ -904,7 +904,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832356277}
-  m_Mesh: {fileID: 1975281874}
+  m_Mesh: {fileID: 1857812802}
 --- !u!4 &1832356280
 Transform:
   m_ObjectHideFlags: 0
@@ -978,7 +978,7 @@ MonoBehaviour:
       - 0
       globalNormalsAngle: 0
       flipNormals: 0
-    vertexPathUpToDate: 1
+    vertexPathUpToDate: 0
     vertexPathMaxAngleError: 2.8
     vertexPathMinVertexSpacing: 0
     showTransformTool: 0
@@ -999,7 +999,7 @@ MonoBehaviour:
     showNormalsHelpInfo: 0
     tabIndex: 0
   initialized: 1
---- !u!43 &1975281874
+--- !u!43 &1857812802
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

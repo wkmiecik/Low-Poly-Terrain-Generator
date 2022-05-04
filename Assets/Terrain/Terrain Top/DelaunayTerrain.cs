@@ -125,7 +125,6 @@ public class DelaunayTerrain : MonoBehaviour {
 
     public virtual void Generate() {
         var rng = new RandomNumbers(seed);
-        Random.InitState(seed);
 
         elevations = new List<float>();
 
@@ -179,8 +178,6 @@ public class DelaunayTerrain : MonoBehaviour {
         {
             StartCoroutine(rocksSpawner.Generate(xsize, ysize, rockMinPointRadius, rockDistanceFromEdges, pointsToAvoid, roadMeshCreator.roadWidth + 4, seed));
         }
-
-
 
 
         //Add uniformly-spaced points
@@ -247,7 +244,7 @@ public class DelaunayTerrain : MonoBehaviour {
         }
 
 
-        // Collet all vertices on the edge of terrain for generatig base
+        // Collect all vertices on the edge of terrain for generatig base
         edgeVertices = new List<Vertex>();
         for (int i = 0; i < mesh.vertices.Count; i++)
         {

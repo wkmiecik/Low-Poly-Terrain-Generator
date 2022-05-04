@@ -60,6 +60,11 @@ public class House : MonoBehaviour
             if (rotationDiff < 3 && distanceFromTopBottom && distanceFromLeftRight)
             {
                 SpawnHouse(spawnPoint, rotation1);
+                pointsToAvoid.Add(spawnPoint);
+                pointsToAvoid.Add(spawnPoint + Vector3.left * 23);
+                pointsToAvoid.Add(spawnPoint + Vector3.right * 23);
+                pointsToAvoid.Add(spawnPoint + Vector3.forward * 23);
+                pointsToAvoid.Add(spawnPoint + Vector3.back * 23);
                 break;
             }
         }

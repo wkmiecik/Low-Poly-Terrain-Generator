@@ -7,6 +7,7 @@ public class RandomNumbers
     public RandomNumbers(int seed = 0)
     {
         this.seed = (uint)seed;
+        if (seed == 0) this.seed = 504500733;
     }
 
     public int Range(int min, int max)
