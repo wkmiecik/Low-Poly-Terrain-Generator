@@ -21,7 +21,7 @@ namespace TriangleNet
         // Empirically chosen factor.
         private const int samplefactor = 11;
 
-        private Random random;
+        private RandomNumbers random;
         private Mesh mesh;
 
         // Number of random samples for point location (at least 1).
@@ -31,11 +31,11 @@ namespace TriangleNet
         private int triangleCount = 0;
 
         public TriangleSampler(Mesh mesh)
-            : this(mesh, new Random(RANDOM_SEED))
+            : this(mesh, new RandomNumbers(RANDOM_SEED))
         {
         }
 
-        public TriangleSampler(Mesh mesh, Random random)
+        public TriangleSampler(Mesh mesh, RandomNumbers random)
         {
             this.mesh = mesh;
             this.random = random;

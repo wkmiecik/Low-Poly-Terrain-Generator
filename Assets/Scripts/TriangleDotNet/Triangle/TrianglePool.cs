@@ -125,7 +125,7 @@ namespace TriangleNet
         /// <param name="k">The number of triangles to sample.</param>
         /// <param name="random"></param>
         /// <returns></returns>
-        internal IEnumerable<Triangle> Sample(int k, Random random)
+        internal IEnumerable<Triangle> Sample(int k, RandomNumbers random)
         {
             int i, count = this.Count;
 
@@ -141,7 +141,7 @@ namespace TriangleNet
 
             while (k > 0)
             {
-                i = random.Next(0, count);
+                i = random.Range(0, count);
 
                 t = pool[i / BLOCKSIZE][i % BLOCKSIZE];
 

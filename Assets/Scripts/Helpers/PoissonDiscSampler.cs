@@ -4,9 +4,10 @@ using UnityEngine;
 
 public static class PoissonDiscSampler
 {
-
-	public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSize, int numSamplesBeforeRejection = 30)
+	public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSize, int numSamplesBeforeRejection = 30, int seed = 100)
 	{
+		RandomNumbers rng = new RandomNumbers(seed);
+
 		float cellSize = radius / Mathf.Sqrt(2);
 
 		int[,] grid = new int[Mathf.CeilToInt(sampleRegionSize.x / cellSize), Mathf.CeilToInt(sampleRegionSize.y / cellSize)];
@@ -16,15 +17,15 @@ public static class PoissonDiscSampler
 		spawnPoints.Add(sampleRegionSize / 2);
 		while (spawnPoints.Count > 0)
 		{
-			int spawnIndex = Random.Range(0, spawnPoints.Count);
+			int spawnIndex = rng.Range(0, spawnPoints.Count);
 			Vector2 spawnCentre = spawnPoints[spawnIndex];
 			bool candidateAccepted = false;
 
 			for (int i = 0; i < numSamplesBeforeRejection; i++)
 			{
-				float angle = Random.value * Mathf.PI * 2;
+				float angle = rng.Range(0f,1f) * Mathf.PI * 2;
 				Vector2 dir = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
-				Vector2 candidate = spawnCentre + dir * Random.Range(radius, 2 * radius);
+				Vector2 candidate = spawnCentre + dir * rng.Range(radius, 2 * radius);
 				if (IsValid(candidate, sampleRegionSize, cellSize, radius, points, grid))
 				{
 					points.Add(candidate);

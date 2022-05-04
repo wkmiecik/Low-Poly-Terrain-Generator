@@ -38,6 +38,9 @@ public class DelaunayTerrain : MonoBehaviour {
     private static List<Vertex> edgeVertices;
     TerrainBase terrainBase;
 
+    [Header("Base")]
+    public float topLayerSize = 10;
+    public float bottomLayerSize = 60;
 
     [Header("Road")]
     public RoadMeshCreator roadMeshCreator;
@@ -46,27 +49,35 @@ public class DelaunayTerrain : MonoBehaviour {
     public float smoothMinValue;
 
     [Header("Trees")]
-    public float treeMinPointRadius = 17;
-    public float treeDistanceFromEdges = 5;
+    public float treeMinPointRadius = 18;
+    public float treeDistanceFromEdges = 6;
     private TreesSpawner treesSpawner;
 
-    [Header("Trees")]
-    public float rockMinPointRadius = 17;
-    public float rockDistanceFromEdges = 3;
+    [Header("Rocks")]
+    public float rockMinPointRadius = 30;
+    public float rockDistanceFromEdges = 6;
     private RocksSpawner rocksSpawner;
+
+    [Header("House")]
+    public float houseDistanceFromPath = 5;
+    public int houseDistanceFromEdge = 50;
+    private House house;
 
 
     [Header("Generation steps")]
     public bool generateBase = true;
     public bool generateRoad = true;
-    public bool generateTrees = true;
+    public bool generateHouse = true;
     public bool generateRocks = true;
+    public bool generateTrees = true;
 
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
         treesSpawner = GetComponentInChildren<TreesSpawner>();
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
+        house = GetComponentInChildren<House>();
+
         Generate();
     }
 
@@ -97,6 +108,9 @@ public class DelaunayTerrain : MonoBehaviour {
                 Destroy(rock);
             }
 
+            // Delete house
+            Destroy(GameObject.FindGameObjectWithTag("house"));
+
             Generate();
         }
     }
@@ -110,6 +124,7 @@ public class DelaunayTerrain : MonoBehaviour {
     }
 
     public virtual void Generate() {
+        var rng = new RandomNumbers(seed);
         Random.InitState(seed);
 
         elevations = new List<float>();
@@ -117,35 +132,55 @@ public class DelaunayTerrain : MonoBehaviour {
         float[] seeds = new float[octaves];
 
         for (int i = 0; i < octaves; i++) {
-            seeds[i] = Random.Range(0.0f, 100.0f);
+            seeds[i] = rng.Range(0.0f, 100.0f);
         }
         
         Polygon polygon = new Polygon();
 
 
         // Randomise path
-        var pointsAlongPath = new List<Vector3>();
+        var pointsToAvoid = new List<Vector3>();
         if (generateRoad)
         {
             roadMeshCreator.gameObject.SetActive(true);
             // Edge point
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(Random.Range(30, xsize - 30), 0, ysize - 0.015f), true);
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(Random.Range(30, xsize - 30), 0, 0.015f), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(rng.Range(30, xsize - 30), 0, ysize - 0.015f), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(rng.Range(30, xsize - 30), 0, 0.015f), true);
             // Middle point and its handles
-            var handle = new Vector3(Random.Range(10, xsize - 10), 0, Random.Range((ysize / 2) + 10, ysize));
+            var handle = new Vector3(rng.Range(10, xsize - 10), 0, rng.Range((ysize / 2) + 10, ysize));
             roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(xsize / 2 + Random.Range(-15,15), 0, ysize / 2 + Random.Range(-15, 15)), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(xsize / 2 + rng.Range(-15,15), 0, ysize / 2 + rng.Range(-15, 15)), true);
             // Update road mesh
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
             roadMeshCreator.UpdateMesh();
 
             // Generate points spaced along path
-            pointsAlongPath = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
+            pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
         } 
         else
         {
             roadMeshCreator.gameObject.SetActive(false);
         }
+
+        // Spawn house
+        if (generateHouse)
+        {
+            house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, seed);
+        }
+
+        // Spawn trees
+        if (generateTrees)
+        {
+            StartCoroutine(treesSpawner.Generate(xsize, ysize, treeMinPointRadius, treeDistanceFromEdges, pointsToAvoid, roadMeshCreator.roadWidth + minPointRadius + 6, seed));
+        }
+
+        // Spawn rocks
+        if (generateRocks)
+        {
+            StartCoroutine(rocksSpawner.Generate(xsize, ysize, rockMinPointRadius, rockDistanceFromEdges, pointsToAvoid, roadMeshCreator.roadWidth + 4, seed));
+        }
+
+
 
 
         //Add uniformly-spaced points
@@ -156,7 +191,7 @@ public class DelaunayTerrain : MonoBehaviour {
 
         // Add some randomly sampled points
         for (int i = 0; i < randomPoints; i++) {
-            polygon.Add(new Vertex(Random.Range(0.0f, xsize), Random.Range(0.0f, ysize)));
+            polygon.Add(new Vertex(rng.Range(0.0f, xsize), rng.Range(0.0f, ysize)));
         }
         // Add corner points
         polygon.Add(new Vertex(0, 0, 1));
@@ -191,9 +226,9 @@ public class DelaunayTerrain : MonoBehaviour {
 
 
             // Fix height along path
-            if (generateRoad)
+            if (pointsToAvoid.Count > 0)
             {
-                foreach (var point in pointsAlongPath)
+                foreach (var point in pointsToAvoid)
                 {
                     var Point2Da = new Vector2(point.x, point.z);
                     var Point2Db = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
@@ -232,19 +267,9 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.elevations = elevations;
             terrainBase.xsize = xsize;
             terrainBase.ysize = ysize;
+            terrainBase.topLayerSize = topLayerSize;
+            terrainBase.bottomLayerSize = bottomLayerSize;
             terrainBase.MakeBase(edgeVertices);
-        }
-
-        // Spawn trees
-        if (generateTrees)
-        {
-            StartCoroutine(treesSpawner.Generate(xsize, ysize, treeMinPointRadius, treeDistanceFromEdges, pointsAlongPath, roadMeshCreator.roadWidth + minPointRadius + 6));
-        }
-
-        // Spawn rocks
-        if (generateRocks)
-        {
-            StartCoroutine(rocksSpawner.Generate(xsize, ysize, rockMinPointRadius, rockDistanceFromEdges, pointsAlongPath, roadMeshCreator.roadWidth + 4));
         }
     }
 
