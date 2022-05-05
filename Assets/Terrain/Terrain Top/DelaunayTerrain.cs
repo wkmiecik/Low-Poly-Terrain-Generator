@@ -9,20 +9,20 @@ public class DelaunayTerrain : MonoBehaviour {
     [Header("Terrain")]
     public int seed = 0;
 
-    public int xsize = 50;
-    public int ysize = 50;
+    public int xsize = 300;
+    public int ysize = 300;
 
-    public float minPointRadius = 4.0f;
+    public float minPointRadius = 12f;
 
-    public int randomPoints = 100;
+    public int randomPoints = 0;
 
     public int trianglesInChunk = 20000;
 
-    public float elevationScale = 100.0f;
+    public float elevationScale = 170.0f;
     public float sampleSize = 1.0f;
     public int octaves = 8;
-    public float frequencyBase = 2;
-    public float persistence = 1.1f;
+    public float frequencyBase = 1.4f;
+    public float persistence = 1.23f;
 
     public Transform chunkPrefab = null;
 
@@ -36,17 +36,17 @@ public class DelaunayTerrain : MonoBehaviour {
     [SerializeField] bool regenerate = false;
 
     private static List<Vertex> edgeVertices;
-    TerrainBase terrainBase;
+    private TerrainBase terrainBase;
 
     [Header("Base")]
-    public float topLayerSize = 10;
+    public float topLayerSize = 9;
     public float bottomLayerSize = 60;
 
     [Header("Road")]
     public RoadMeshCreator roadMeshCreator;
-    public float roadSmoothDistance;
+    public float roadSmoothDistance = 50;
     [Range(0,1f)]
-    public float smoothMinValue;
+    public float smoothMinValue = 0.58f;
 
     [Header("Trees")]
     public float treeMinPointRadius = 18;
@@ -54,13 +54,13 @@ public class DelaunayTerrain : MonoBehaviour {
     private TreesSpawner treesSpawner;
 
     [Header("Rocks")]
-    public float rockMinPointRadius = 30;
+    public float rockMinPointRadius = 47;
     public float rockDistanceFromEdges = 6;
     private RocksSpawner rocksSpawner;
 
     [Header("House")]
-    public float houseDistanceFromPath = 5;
-    public int houseDistanceFromEdge = 50;
+    public float houseDistanceFromPath = 35;
+    public int houseDistanceFromEdge = 35;
     private House house;
 
 
@@ -87,26 +87,14 @@ public class DelaunayTerrain : MonoBehaviour {
         if (regenerate) {
             regenerate = false;
 
+            // Clear playing animations
             StopAllCoroutines();
             DOTween.Clear();
 
-            // Delete terrain
-            toDelete.AddRange(GameObject.FindGameObjectsWithTag("chunk"));
-            // Delete base top
-            toDelete.AddRange(GameObject.FindGameObjectsWithTag("baseTop"));
-            // Delete base bottom
-            toDelete.AddRange(GameObject.FindGameObjectsWithTag("baseBottom"));
-            // Delete trees
-            toDelete.AddRange(GameObject.FindGameObjectsWithTag("tree"));
-            // Delete rocks
-            toDelete.AddRange(GameObject.FindGameObjectsWithTag("rock"));
-            // Delete house
-            toDelete.Add(GameObject.FindGameObjectWithTag("house"));
-
+            // Delete everything on delete list
             foreach (var gameObject in toDelete) {
                 Destroy(gameObject);
             }
-
             toDelete.Clear();
 
             Generate();
@@ -162,19 +150,36 @@ public class DelaunayTerrain : MonoBehaviour {
         // Spawn house
         if (generateHouse)
         {
-            house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, seed);
+            var houseObj = house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, seed);
+            if (houseObj != null) toDelete.Add(houseObj);
         }
 
         // Spawn trees
         if (generateTrees)
         {
-            StartCoroutine(treesSpawner.Generate(xsize, ysize, treeMinPointRadius, treeDistanceFromEdges, pointsToAvoid, roadMeshCreator.roadWidth + minPointRadius + 6, seed));
+            StartCoroutine(treesSpawner.Generate(
+                xsize,
+                ysize,
+                treeMinPointRadius,
+                treeDistanceFromEdges,
+                pointsToAvoid,
+                roadMeshCreator.roadWidth + minPointRadius + 6,
+                toDelete,
+                seed));
         }
 
         // Spawn rocks
         if (generateRocks)
         {
-            StartCoroutine(rocksSpawner.Generate(xsize, ysize, rockMinPointRadius, rockDistanceFromEdges, pointsToAvoid, roadMeshCreator.roadWidth + 4, seed));
+            StartCoroutine(rocksSpawner.Generate(
+                xsize,
+                ysize,
+                rockMinPointRadius,
+                rockDistanceFromEdges,
+                pointsToAvoid,
+                roadMeshCreator.roadWidth + 4,
+                toDelete,
+                seed));
         }
 
 
@@ -264,7 +269,7 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.ysize = ysize;
             terrainBase.topLayerSize = topLayerSize;
             terrainBase.bottomLayerSize = bottomLayerSize;
-            terrainBase.MakeBase(edgeVertices);
+            toDelete.AddRange(terrainBase.MakeBase(edgeVertices));
         }
 
         //foreach (var item in pointsToAvoid)
@@ -319,6 +324,7 @@ public class DelaunayTerrain : MonoBehaviour {
             chunkMesh.normals = normals.ToArray();
 
             Transform chunk = Instantiate<Transform>(chunkPrefab, transform.position, transform.rotation, transform);
+            toDelete.Add(chunk.gameObject);
             chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
             chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
         }

@@ -11,7 +11,7 @@ public class House : MonoBehaviour
 
     private RandomNumbers rng;
 
-    public void Generate(float xsize, float ysize, List<Vector3> pointsToAvoid, float houseDistanceFromPath, int houseDistanceFromEdge, int seed = 100)
+    public GameObject Generate(float xsize, float ysize, List<Vector3> pointsToAvoid, float houseDistanceFromPath, int houseDistanceFromEdge, int seed = 100)
     {
         rng = new RandomNumbers(seed);
 
@@ -20,7 +20,7 @@ public class House : MonoBehaviour
         // Spawn in random position if there is no road
         if (pointsToAvoid.Count == 0)
         {
-            return;
+            return null;
         }
 
         for (int i = 0; i < maxAttempts; i++)
@@ -59,20 +59,21 @@ public class House : MonoBehaviour
 
             if (rotationDiff < 3 && distanceFromTopBottom && distanceFromLeftRight)
             {
-                SpawnHouse(spawnPoint, rotation1);
+                var obj = SpawnHouse(spawnPoint, rotation1);
                 pointsToAvoid.Add(spawnPoint);
                 pointsToAvoid.Add(spawnPoint + new Vector3(perpendicularBack.x, 0, perpendicularBack.y) * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.left * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.right * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.forward * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.back * 23);
-                break;
+                return obj;
             }
         }
+        return null;
     }
 
 
-    private void SpawnHouse(Vector3 pos, float rotEulerY)
+    private GameObject SpawnHouse(Vector3 pos, float rotEulerY)
     {
         var rot = Quaternion.Euler(new Vector3(0, rotEulerY, 0));
         var scale = Vector3.one;
@@ -82,5 +83,6 @@ public class House : MonoBehaviour
 
         obj.transform.localScale = new Vector3(0,0,0);
         obj.transform.DOScale(scale, .3f);
+        return obj;
     }
 }

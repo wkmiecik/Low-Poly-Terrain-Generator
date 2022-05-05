@@ -12,7 +12,15 @@ public class RocksSpawner : MonoBehaviour
 
     private RandomNumbers rng;
 
-    public IEnumerator Generate(float xsize, float ysize, float minPointRadius, float distanceFromEdges, List<Vector3> pointsToAvoid, float pointsAvoidDistance, int seed = 100)
+    public IEnumerator Generate(
+        float xsize,
+        float ysize,
+        float minPointRadius,
+        float distanceFromEdges,
+        List<Vector3> pointsToAvoid,
+        float pointsAvoidDistance,
+        List<GameObject> toDelete,
+        int seed = 100)
     {
         rng = new RandomNumbers(seed);
 
@@ -23,7 +31,8 @@ public class RocksSpawner : MonoBehaviour
         // Add uniformly-spaced rocks
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(400 * Time.deltaTime) == 0) yield return null;
+            if (i % Mathf.CeilToInt(400 * Time.deltaTime) == 0) 
+                yield return null;
 
             var prefab = rockPrefabs[rng.Range(0, rockPrefabs.Count)];
             var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 50, samples[i].y + distanceFromEdges / 2);
@@ -40,7 +49,10 @@ public class RocksSpawner : MonoBehaviour
                     }
                 }
 
-                if (spawn) SpawnTree(prefab, hit.point);
+                if (spawn)
+                {
+                    toDelete.Add(SpawnTree(prefab, hit.point));
+                }
             }
         }
 
@@ -61,14 +73,14 @@ public class RocksSpawner : MonoBehaviour
             {
                 if (hit.collider.CompareTag(baseTag))
                 {
-                    SpawnTree(prefab, hit.point, 3.5f, 4.5f);
+                    toDelete.Add(SpawnTree(prefab, hit.point, 3.5f, 4.5f));
                 }
             }
         }
     }
 
 
-    private void SpawnTree(GameObject prefab, Vector3 pos, float minScale = 2f, float maxScale = 3f)
+    private GameObject SpawnTree(GameObject prefab, Vector3 pos, float minScale = 2f, float maxScale = 3f)
     {
         var rot = Quaternion.Euler(rng.Range(0, 360), rng.Range(0, 360), rng.Range(0, 360));
         var scale = new Vector3(1 + rng.Range(minScale, maxScale), 1 + rng.Range(minScale, maxScale), 1 + rng.Range(minScale, maxScale));
@@ -83,6 +95,7 @@ public class RocksSpawner : MonoBehaviour
 
 
         obj.transform.localScale = Vector3.zero;
-        obj.transform.DOScale(scale, .3f);
+        obj.transform.DOScale(scale, .5f);
+        return obj;
     }
 }
