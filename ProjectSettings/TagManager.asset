@@ -8,6 +8,8 @@ TagManager:
   - tree
   - rock
   - house
+  - baseTop
+  - baseBottom
   layers:
   - Default
   - TransparentFX

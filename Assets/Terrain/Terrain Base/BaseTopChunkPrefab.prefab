@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 64308250482023768}
   m_Layer: 11
   m_Name: BaseTopChunkPrefab
-  m_TagString: chunk
+  m_TagString: baseTop
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

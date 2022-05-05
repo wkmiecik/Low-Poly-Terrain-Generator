@@ -61,6 +61,7 @@ public class House : MonoBehaviour
             {
                 SpawnHouse(spawnPoint, rotation1);
                 pointsToAvoid.Add(spawnPoint);
+                pointsToAvoid.Add(spawnPoint + new Vector3(perpendicularBack.x, 0, perpendicularBack.y) * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.left * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.right * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.forward * 23);

@@ -71,6 +71,8 @@ public class DelaunayTerrain : MonoBehaviour {
     public bool generateRocks = true;
     public bool generateTrees = true;
 
+    private List<GameObject> toDelete = new List<GameObject>();
+
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
@@ -89,27 +91,23 @@ public class DelaunayTerrain : MonoBehaviour {
             DOTween.Clear();
 
             // Delete terrain
-            GameObject[] chunks = GameObject.FindGameObjectsWithTag("chunk");
-            foreach (GameObject chunk in chunks) {
-                Destroy(chunk);
-            }
-
+            toDelete.AddRange(GameObject.FindGameObjectsWithTag("chunk"));
+            // Delete base top
+            toDelete.AddRange(GameObject.FindGameObjectsWithTag("baseTop"));
+            // Delete base bottom
+            toDelete.AddRange(GameObject.FindGameObjectsWithTag("baseBottom"));
             // Delete trees
-            GameObject[] trees = GameObject.FindGameObjectsWithTag("tree");
-            foreach (GameObject tree in trees)
-            {
-                Destroy(tree);
-            }
-
+            toDelete.AddRange(GameObject.FindGameObjectsWithTag("tree"));
             // Delete rocks
-            GameObject[] rocks = GameObject.FindGameObjectsWithTag("rock");
-            foreach (GameObject rock in rocks)
-            {
-                Destroy(rock);
+            toDelete.AddRange(GameObject.FindGameObjectsWithTag("rock"));
+            // Delete house
+            toDelete.Add(GameObject.FindGameObjectWithTag("house"));
+
+            foreach (var gameObject in toDelete) {
+                Destroy(gameObject);
             }
 
-            // Delete house
-            Destroy(GameObject.FindGameObjectWithTag("house"));
+            toDelete.Clear();
 
             Generate();
         }
@@ -268,6 +266,11 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.bottomLayerSize = bottomLayerSize;
             terrainBase.MakeBase(edgeVertices);
         }
+
+        //foreach (var item in pointsToAvoid)
+        //{
+        //    Debug.DrawLine(item, item + Vector3.up * 20, Color.red, 15);
+        //}
     }
 
     public void MakeMesh() {
