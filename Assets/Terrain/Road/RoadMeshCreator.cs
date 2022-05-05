@@ -85,12 +85,10 @@ public class RoadMeshCreator : MonoBehaviour
         int[] triangleMap = { 0, 8, 1, 1, 8, 9 };
         int[] sidesTriangleMap = { 4, 6, 14, 12, 4, 14, 5, 15, 7, 13, 15, 5 };
 
-        bool usePathNormals = !(pathCreator.path.space == PathSpace.xyz && flattenSurface);
-
         for (int i = 0; i < pathCreator.path.NumPoints; i++)
         {
-            Vector3 localUp = (usePathNormals) ? Vector3.Cross(pathCreator.path.GetTangent(i), pathCreator.path.GetNormal(i)) : pathCreator.path.up;
-            Vector3 localRight = (usePathNormals) ? pathCreator.path.GetNormal(i) : Vector3.Cross(localUp, pathCreator.path.GetTangent(i));
+            Vector3 localUp = (flattenSurface) ? pathCreator.path.up : Vector3.Cross(pathCreator.path.GetTangent(i), pathCreator.path.GetNormal(i));
+            Vector3 localRight = (flattenSurface) ? Vector3.Cross(localUp, pathCreator.path.GetTangent(i)) : pathCreator.path.GetNormal(i);
 
             // Find position to left and right of current path vertex
             Vector3 vertSideA = pathCreator.path.GetPoint(i) - localRight * Mathf.Abs(roadWidth);

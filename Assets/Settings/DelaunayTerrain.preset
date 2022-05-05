@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!181963792 &2655988077585873504
+Preset:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: DelaunayTerrain
+  m_TargetType:
+    m_NativeTypeID: 114
+    m_ManagedTypePPtr: {fileID: 11500000, guid: bc895de1bba1d53498821dc6813cdf5a, type: 3}
+    m_ManagedTypeFallback: 
+  m_Properties:
+  - target: {fileID: 0}
+    propertyPath: m_Enabled
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_EditorHideFlags
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_EditorClassIdentifier
+    value: 
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: seed
+    value: 38
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: xsize
+    value: 300
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: ysize
+    value: 300
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: minPointRadius
+    value: 12
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: randomPoints
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: trianglesInChunk
+    value: 20000
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: elevationScale
+    value: 170
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: sampleSize
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: octaves
+    value: 8
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: frequencyBase
+    value: 1.4
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: persistence
+    value: 1.23
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: chunkPrefab
+    value: 
+    objectReference: {fileID: 4760822391077712, guid: 00a4cb1aab563c343a0424f38f2ed8f0, type: 3}
+  - target: {fileID: 0}
+    propertyPath: vertexMergeSize
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: vertexEdgeMergeDistance
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: regenerate
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: topLayerSize
+    value: 9
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: bottomLayerSize
+    value: 60
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: roadMeshCreator
+    value: 
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: roadSmoothDistance
+    value: 50
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: smoothMinValue
+    value: 0.58
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: treeMinPointRadius
+    value: 18
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: treeDistanceFromEdges
+    value: 6
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: rockMinPointRadius
+    value: 47
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: rockDistanceFromEdges
+    value: 6
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: houseDistanceFromPath
+    value: 35
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: houseDistanceFromEdge
+    value: 35
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: generateBase
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: generateRoad
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: generateHouse
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: generateRocks
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: generateTrees
+    value: 1
+    objectReference: {fileID: 0}
+  m_ExcludedProperties: []

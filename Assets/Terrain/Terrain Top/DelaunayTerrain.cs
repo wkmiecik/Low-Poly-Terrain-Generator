@@ -8,6 +8,7 @@ using DG.Tweening;
 public class DelaunayTerrain : MonoBehaviour {
     [Header("Terrain")]
     public int seed = 0;
+    float[] seeds;
 
     public int xsize = 300;
     public int ysize = 300;
@@ -44,9 +45,8 @@ public class DelaunayTerrain : MonoBehaviour {
 
     [Header("Road")]
     public RoadMeshCreator roadMeshCreator;
-    public float roadSmoothDistance = 50;
-    [Range(0,1f)]
-    public float smoothMinValue = 0.58f;
+    public float roadSmoothDistance = 70;
+    public float roadHeightSmoothDistance = 20f;
 
     [Header("Trees")]
     public float treeMinPointRadius = 18;
@@ -59,7 +59,7 @@ public class DelaunayTerrain : MonoBehaviour {
     private RocksSpawner rocksSpawner;
 
     [Header("House")]
-    public float houseDistanceFromPath = 35;
+    public float houseDistanceFromPath = 45;
     public int houseDistanceFromEdge = 35;
     private House house;
 
@@ -83,8 +83,10 @@ public class DelaunayTerrain : MonoBehaviour {
         Generate();
     }
 
-    void Update() {
-        if (regenerate) {
+    void Update() 
+    {
+        if (regenerate) 
+        {
             regenerate = false;
 
             // Clear playing animations
@@ -92,10 +94,22 @@ public class DelaunayTerrain : MonoBehaviour {
             DOTween.Clear();
 
             // Delete everything on delete list
-            foreach (var gameObject in toDelete) {
+            foreach (var gameObject in toDelete) 
+            {
                 Destroy(gameObject);
             }
             toDelete.Clear();
+
+            // Reset road
+            var firstPoint = new Vector2(150, ysize - 0.015f);
+            var middlePoint = new Vector2(xsize / 2 + 7.5f, ysize / 2 + 7.5f);
+            var lastPoint = new Vector2(150, 0.015f);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(firstPoint.x, 0, firstPoint.y), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(lastPoint.x, 0, lastPoint.y), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(2, new Vector3(150, 0, 230), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(middlePoint.x, 0, middlePoint.y), true);
+            roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
+            roadMeshCreator.UpdateMesh();
 
             Generate();
         }
@@ -109,38 +123,43 @@ public class DelaunayTerrain : MonoBehaviour {
         }
     }
 
-    public virtual void Generate() {
+    public virtual void Generate() 
+    {
         var rng = new RandomNumbers(seed);
 
+        Polygon polygon = new Polygon();
+
         elevations = new List<float>();
-
-        float[] seeds = new float[octaves];
-
-        for (int i = 0; i < octaves; i++) {
+        seeds = new float[octaves];
+        for (int i = 0; i < octaves; i++) 
+        {
             seeds[i] = rng.Range(0.0f, 100.0f);
         }
-        
-        Polygon polygon = new Polygon();
 
 
         // Randomise path
         var pointsToAvoid = new List<Vector3>();
         if (generateRoad)
         {
+            var firstPoint = new Vector2(rng.Range(30, xsize - 30), ysize - 0.015f);
+            var middlePoint = new Vector2(xsize / 2 + rng.Range(-15, 15), ysize / 2 + rng.Range(-15, 15));
+            var lastPoint = new Vector2(rng.Range(30, xsize - 30), 0.015f);
+
             roadMeshCreator.gameObject.SetActive(true);
             // Edge point
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(rng.Range(30, xsize - 30), 0, ysize - 0.015f), true);
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(rng.Range(30, xsize - 30), 0, 0.015f), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(firstPoint.x, GetPerlinElevation(firstPoint, roadHeightSmoothDistance), firstPoint.y), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(lastPoint.x, GetPerlinElevation(lastPoint, roadHeightSmoothDistance), lastPoint.y), true);
             // Middle point and its handles
-            var handle = new Vector3(rng.Range(10, xsize - 10), 0, rng.Range((ysize / 2) + 10, ysize));
+            var handle = new Vector3(rng.Range(10, xsize - 10), 0, rng.Range((ysize / 2) + 40, ysize - 20));
             roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(xsize / 2 + rng.Range(-15,15), 0, ysize / 2 + rng.Range(-15, 15)), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(middlePoint.x, GetPerlinElevation(middlePoint, roadHeightSmoothDistance), middlePoint.y), true);
+
             // Update road mesh
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
             roadMeshCreator.UpdateMesh();
 
             // Generate points spaced along path
-            pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(15);
+            pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
         } 
         else
         {
@@ -190,7 +209,8 @@ public class DelaunayTerrain : MonoBehaviour {
         }
 
         // Add some randomly sampled points
-        for (int i = 0; i < randomPoints; i++) {
+        for (int i = 0; i < randomPoints; i++) 
+        {
             polygon.Add(new Vertex(rng.Range(0.0f, xsize), rng.Range(0.0f, ysize)));
         }
         // Add corner points
@@ -206,45 +226,45 @@ public class DelaunayTerrain : MonoBehaviour {
         for (int i = 0; i < mesh.vertices.Count; i++)
         {
             // Base height from perlin noise
-            float elevation = 0.0f;
-            float amplitude = Mathf.Pow(persistence, octaves);
-            float frequency = 1.0f;
-            float maxVal = 0.0f;
+            float elevation = GetPerlinElevation(new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y));
 
-            for (int o = 0; o < octaves; o++)
-            {
-                float sample = (Mathf.PerlinNoise(seeds[o] + (float)mesh.vertices[i].x * sampleSize / (float)xsize * frequency,
-                                                  seeds[o] + (float)mesh.vertices[i].y * sampleSize / (float)ysize * frequency) - 0.5f) * amplitude;
-                elevation += sample;
-                maxVal += amplitude;
-                amplitude /= persistence;
-                frequency *= frequencyBase;
-            }
-
-            elevation = elevation / maxVal;
-            elevation *= elevationScale;
-
-
+            //var point = roadMeshCreator.pathCreator.path.GetClosestPointOnPath(mesh.vertices[i]);
             // Fix height along path
+            // Possible optimization: save 2 closest point and calculate average height from them. Could then decrease amount of points on road.
+            var roadWidth = roadMeshCreator.roadWidth + minPointRadius + 6;
             if (pointsToAvoid.Count > 0)
             {
+                Vector3 closestPointOnRoad = Vector3.zero;
+                float distToRoad = float.MaxValue;
                 foreach (var point in pointsToAvoid)
                 {
                     var Point2Da = new Vector2(point.x, point.z);
                     var Point2Db = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
-                    var distSqr = (Point2Da - Point2Db).sqrMagnitude;
-                    var roadWidth = roadMeshCreator.roadWidth + minPointRadius + 6;
+                    var dist = Vector2.Distance(Point2Da, Point2Db);
 
-                    if (distSqr <= roadWidth * roadWidth) elevation = -1;
-                    else if (distSqr > roadWidth * roadWidth && distSqr < roadSmoothDistance * roadSmoothDistance)
+                    if (dist < distToRoad)
                     {
-                        elevation *= map(distSqr, roadWidth * roadWidth, roadSmoothDistance * roadSmoothDistance, smoothMinValue, 1);
+                        distToRoad = dist;
+                        closestPointOnRoad = point;
                     }
+                }
+
+                if (distToRoad <= roadWidth)
+                {
+                    elevation = closestPointOnRoad.y - 1;
+                }
+                else if (distToRoad > roadWidth && distToRoad < roadSmoothDistance)
+                {
+                    elevation = map(distToRoad, roadWidth, roadSmoothDistance, closestPointOnRoad.y - 1, elevation);
                 }
             }
 
             elevations.Add(elevation);
         }
+        //foreach (var item in pointsToAvoid)
+        //{
+        //    Debug.DrawLine(item, item + Vector3.up * 20, Color.red, 15);
+        //}
 
 
         // Collect all vertices on the edge of terrain for generatig base
@@ -271,17 +291,55 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.bottomLayerSize = bottomLayerSize;
             toDelete.AddRange(terrainBase.MakeBase(edgeVertices));
         }
-
-        //foreach (var item in pointsToAvoid)
-        //{
-        //    Debug.DrawLine(item, item + Vector3.up * 20, Color.red, 15);
-        //}
     }
 
-    public void MakeMesh() {
+
+    public float GetPerlinElevation(Vector2 point, float averageDist = 0)
+    {
+        if (averageDist > 0)
+        {
+            float sum = 0;
+            sum += GetPerlinElevation(point);
+            sum += GetPerlinElevation(point + Vector2.left * averageDist);
+            sum += GetPerlinElevation(point + Vector2.right * averageDist);
+            sum += GetPerlinElevation(point + Vector2.up * averageDist);
+            sum += GetPerlinElevation(point + Vector2.down * averageDist);
+
+            sum += GetPerlinElevation(point + ((Vector2.left + Vector2.up) / 2) * averageDist);
+            sum += GetPerlinElevation(point + ((Vector2.right + Vector2.up) / 2) * averageDist);
+            sum += GetPerlinElevation(point + ((Vector2.left + Vector2.down) / 2) * averageDist);
+            sum += GetPerlinElevation(point + ((Vector2.right + Vector2.down) / 2) * averageDist);
+
+            return sum / 9;
+        }
+
+        // Base height from perlin noise
+        float elevation = 0.0f;
+        float amplitude = Mathf.Pow(persistence, octaves);
+        float frequency = 1.0f;
+        float maxVal = 0.0f;
+
+        for (int o = 0; o < octaves; o++)
+        {
+            float sample = (Mathf.PerlinNoise(seeds[o] + point.x * sampleSize / xsize * frequency,
+                                              seeds[o] + point.y * sampleSize / ysize * frequency) - 0.5f) * amplitude;
+            elevation += sample;
+            maxVal += amplitude;
+            amplitude /= persistence;
+            frequency *= frequencyBase;
+        }
+
+        elevation = (elevation / maxVal) * elevationScale;
+
+        return elevation;
+    }
+
+    public void MakeMesh() 
+    {
         IEnumerator<Triangle> triangleEnumerator = mesh.Triangles.GetEnumerator();
 
-        for (int chunkStart = 0; chunkStart < mesh.Triangles.Count; chunkStart += trianglesInChunk) {
+        for (int chunkStart = 0; chunkStart < mesh.Triangles.Count; chunkStart += trianglesInChunk) 
+        {
             List<Vector3> vertices = new List<Vector3>();
             List<Vector3> normals = new List<Vector3>();
             List<Vector2> uvs = new List<Vector2>();
@@ -330,7 +388,8 @@ public class DelaunayTerrain : MonoBehaviour {
         }
     }
 
-    public Vector3 GetPoint3D(int index) {
+    public Vector3 GetPoint3D(int index) 
+    {
         Vertex vertex = mesh.vertices[index];
         float elevation = elevations[index];
         return new Vector3((float)vertex.x, elevation, (float)vertex.y);

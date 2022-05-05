@@ -25,13 +25,13 @@ public class House : MonoBehaviour
 
         for (int i = 0; i < maxAttempts; i++)
         {
-            var pointIndex = rng.Range(3, pointsToAvoid.Count - 3);
+            var pointIndex = rng.Range(8, pointsToAvoid.Count - 8);
 
             var heigth = pointsToAvoid[pointIndex].y;
 
-            var pointBack = new Vector2(pointsToAvoid[pointIndex - 1].x, pointsToAvoid[pointIndex - 1].z);
+            var pointBack = new Vector2(pointsToAvoid[pointIndex - 6].x, pointsToAvoid[pointIndex - 6].z);
             var point = new Vector2(pointsToAvoid[pointIndex].x, pointsToAvoid[pointIndex].z);
-            var pointFront = new Vector2(pointsToAvoid[pointIndex + 1].x, pointsToAvoid[pointIndex + 1].z);
+            var pointFront = new Vector2(pointsToAvoid[pointIndex + 6].x, pointsToAvoid[pointIndex + 6].z);
 
             var perpendicularBack = Vector2.Perpendicular(point - pointBack).normalized;
             var perpendicularFront = Vector2.Perpendicular(pointFront - point).normalized;
