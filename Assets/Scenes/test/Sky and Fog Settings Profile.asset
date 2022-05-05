@@ -364,7 +364,7 @@ MonoBehaviour:
     m_Value: 0.00001
   farFocusStart:
     m_OverrideState: 1
-    m_Value: 400
+    m_Value: 420
   farFocusEnd:
     m_OverrideState: 1
     m_Value: 1000
@@ -839,7 +839,7 @@ MonoBehaviour:
   active: 1
   maxShadowDistance:
     m_OverrideState: 1
-    m_Value: 900
+    m_Value: 750
   directionalTransmissionMultiplier:
     m_OverrideState: 1
     m_Value: 1
@@ -993,7 +993,7 @@ MonoBehaviour:
     m_Value: 346.1
   meanFreePath:
     m_OverrideState: 1
-    m_Value: 2100
+    m_Value: 7825.7
   enableVolumetricFog:
     m_OverrideState: 1
     m_Value: 1

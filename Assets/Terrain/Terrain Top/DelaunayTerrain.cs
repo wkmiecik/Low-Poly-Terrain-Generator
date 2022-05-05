@@ -61,7 +61,7 @@ public class DelaunayTerrain : MonoBehaviour {
     [Header("House")]
     public float houseDistanceFromPath = 45;
     public int houseDistanceFromEdge = 35;
-    private House house;
+    private HouseSpawner house;
 
 
     [Header("Generation steps")]
@@ -78,7 +78,7 @@ public class DelaunayTerrain : MonoBehaviour {
         terrainBase = GetComponentInChildren<TerrainBase>();
         treesSpawner = GetComponentInChildren<TreesSpawner>();
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
-        house = GetComponentInChildren<House>();
+        house = GetComponentInChildren<HouseSpawner>();
 
         Generate();
     }

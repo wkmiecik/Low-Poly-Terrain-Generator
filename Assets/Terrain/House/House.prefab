@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &692139562634703583
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6518394356079674255}
+  m_Layer: 0
+  m_Name: Smoke Spawn Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6518394356079674255
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 692139562634703583}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 45.27, z: 7.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1236693996139472264}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1901167821273972530
 GameObject:
   m_ObjectHideFlags: 0
@@ -11,6 +42,7 @@ GameObject:
   - component: {fileID: 1236693996139472264}
   - component: {fileID: 2775982320057805357}
   - component: {fileID: 99838403303939815}
+  - component: {fileID: 5078474261385336629}
   - component: {fileID: 9112127634993276934}
   m_Layer: 0
   m_Name: House
@@ -30,7 +62,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 6518394356079674255}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -91,6 +124,29 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5078474261385336629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1901167821273972530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bb6be0b3a225424e89336deb512c05a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  smokePrefabs:
+  - {fileID: 7692093968327302161, guid: 15a58a690a458e34583d71820def2925, type: 3}
+  - {fileID: 4496829532634308456, guid: 46490d93f3827a449966f5b2a510fb1f, type: 3}
+  - {fileID: 2922018337660513603, guid: 2a04d0ce365fc6e4682af5f9a1857b76, type: 3}
+  - {fileID: 6059106199708221451, guid: 2a8ea88bf05011f4cae8dce9d269d2a2, type: 3}
+  - {fileID: 7417088470095789748, guid: d98ec561dc199aa4e98bb660a3a09e34, type: 3}
+  - {fileID: 5122963252731639225, guid: 5864739fee308b84faf6c8b54a28312c, type: 3}
+  - {fileID: 4749407893128854202, guid: 43e7025cca8b8ab4a953f8c01c71e904, type: 3}
+  - {fileID: 8116685585572524644, guid: 5d219247abb6e4f45a42602bdc38ee17, type: 3}
+  spawnPosition: {fileID: 6518394356079674255}
+  spawnDelay: 1.7
 --- !u!64 &9112127634993276934
 MeshCollider:
   m_ObjectHideFlags: 0
