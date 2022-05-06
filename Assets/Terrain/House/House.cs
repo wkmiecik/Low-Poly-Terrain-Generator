@@ -21,7 +21,7 @@ public class House : MonoBehaviour
         if (timer <= 0)
         {
             timer = spawnDelay;
-            var obj = Instantiate(smokePrefabs[rng.Range(0, smokePrefabs.Count - 1)], spawnPosition.transform.position, Quaternion.identity);
+            var obj = Instantiate(smokePrefabs[rng.Range(0, smokePrefabs.Count - 1)], spawnPosition.transform.position, Quaternion.identity, transform);
         }
 
         timer -= Time.deltaTime;

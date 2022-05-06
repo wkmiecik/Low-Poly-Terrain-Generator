@@ -281,8 +281,9 @@ namespace PathCreation {
         }
 
         /// Insert new anchor point at given position. Automatically place control points around it so as to keep shape of curve the same
-        public void SplitSegment (Vector3 anchorPos, int segmentIndex, float splitTime) {
+        public int SplitSegment (Vector3 anchorPos, int segmentIndex, float splitTime, bool chagnePos = true) {
             splitTime = Mathf.Clamp01 (splitTime);
+            int newAnchorIndex = 0;
 
             if (controlMode == ControlMode.Automatic) {
                 points.InsertRange (segmentIndex * 3 + 2, new Vector3[] { Vector3.zero, anchorPos, Vector3.zero });
@@ -292,10 +293,10 @@ namespace PathCreation {
                 // Curve will probably be deformed slightly since splitTime is only an estimate (for performance reasons, and so doesn't correspond exactly with anchorPos)
                 Vector3[][] splitSegment = CubicBezierUtility.SplitCurve (GetPointsInSegment (segmentIndex), splitTime);
                 points.InsertRange (segmentIndex * 3 + 2, new Vector3[] { splitSegment[0][2], splitSegment[1][0], splitSegment[1][1] });
-                int newAnchorIndex = segmentIndex * 3 + 3;
+                newAnchorIndex = segmentIndex * 3 + 3;
                 MovePoint (newAnchorIndex - 2, splitSegment[0][1], true);
                 MovePoint (newAnchorIndex + 2, splitSegment[1][2], true);
-                MovePoint (newAnchorIndex, anchorPos, true);
+                if (chagnePos) MovePoint (newAnchorIndex, anchorPos, true);
 
                 if (controlMode == ControlMode.Mirrored) {
                     float avgDst = ((splitSegment[0][2] - anchorPos).magnitude + (splitSegment[1][1] - anchorPos).magnitude) / 2;
@@ -312,6 +313,7 @@ namespace PathCreation {
             perAnchorNormalsAngle.Insert (newAnchorAngleIndex, splitAngle);
 
             NotifyPathModified ();
+            return newAnchorIndex;
         }
 
         /// Delete the anchor point at given index, as well as its associated control points

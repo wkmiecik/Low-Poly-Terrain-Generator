@@ -10,8 +10,9 @@ public class DelaunayTerrain : MonoBehaviour {
     public int seed = 0;
     float[] seeds;
 
-    public int xsize = 300;
-    public int ysize = 300;
+    public int size = 300;
+    private int xsize = 300;
+    private int ysize = 300;
 
     public float minPointRadius = 12f;
 
@@ -20,9 +21,10 @@ public class DelaunayTerrain : MonoBehaviour {
     public int trianglesInChunk = 20000;
 
     public float elevationScale = 170.0f;
-    public float sampleSize = 1.0f;
+    private float sampleSize = 1.0f;
     public int octaves = 8;
-    public float frequencyBase = 1.4f;
+    public float noiseFrequency = 1.4f;
+    private float frequencyBase;
     public float persistence = 1.23f;
 
     public Transform chunkPrefab = null;
@@ -80,7 +82,7 @@ public class DelaunayTerrain : MonoBehaviour {
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
         house = GetComponentInChildren<HouseSpawner>();
 
-        Generate();
+        regenerate = true;
     }
 
     void Update() 
@@ -101,15 +103,23 @@ public class DelaunayTerrain : MonoBehaviour {
             toDelete.Clear();
 
             // Reset road
+            roadMeshCreator.pathCreator.bezierPath = new PathCreation.BezierPath(new Vector3(xsize / 2, 0, ysize / 2));
+            roadMeshCreator.pathCreator.bezierPath.AddSegmentToStart(Vector3.zero);
+
             var firstPoint = new Vector2(150, ysize - 0.015f);
-            var middlePoint = new Vector2(xsize / 2 + 7.5f, ysize / 2 + 7.5f);
+            var middlePoint = new Vector2(xsize / 2, ysize / 2);
             var lastPoint = new Vector2(150, 0.015f);
             roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(firstPoint.x, 0, firstPoint.y), true);
             roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(lastPoint.x, 0, lastPoint.y), true);
-            roadMeshCreator.pathCreator.bezierPath.MovePoint(2, new Vector3(150, 0, 230), true);
+
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(1, new Vector3(firstPoint.x, 0, firstPoint.y - 50), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(5, new Vector3(lastPoint.x, 0, lastPoint.y + 50), true);
+
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(2, new Vector3(100, 0, 230), true);
             roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(middlePoint.x, 0, middlePoint.y), true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(4, new Vector3(200, 0, 70), true);
+
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
-            roadMeshCreator.UpdateMesh();
 
             Generate();
         }
@@ -119,6 +129,12 @@ public class DelaunayTerrain : MonoBehaviour {
     {
         if (Application.isPlaying)
         {
+            // Set variables
+            xsize = size;
+            ysize = size;
+            frequencyBase = noiseFrequency / 100;
+            sampleSize = size;
+
             regenerate = true;
         }
     }
@@ -153,6 +169,16 @@ public class DelaunayTerrain : MonoBehaviour {
             var handle = new Vector3(rng.Range(10, xsize - 10), 0, rng.Range((ysize / 2) + 40, ysize - 20));
             roadMeshCreator.pathCreator.bezierPath.MovePoint(2, handle, true);
             roadMeshCreator.pathCreator.bezierPath.MovePoint(3, new Vector3(middlePoint.x, GetPerlinElevation(middlePoint, roadHeightSmoothDistance), middlePoint.y), true);
+
+            // Add new segments for the path so it looks more accurate
+            var newAnchor1 = roadMeshCreator.pathCreator.bezierPath.SplitSegment(Vector3.zero, 0, 0.5f, false);
+            var newAnchor2 = roadMeshCreator.pathCreator.bezierPath.SplitSegment(Vector3.zero, 2, 0.5f, false);
+            var newAnchor1pos = roadMeshCreator.pathCreator.bezierPath.GetPoint(newAnchor1);
+            var newAnchor2pos = roadMeshCreator.pathCreator.bezierPath.GetPoint(newAnchor2);
+            newAnchor1pos.y = GetPerlinElevation(new Vector2(newAnchor1pos.x, newAnchor1pos.z), roadHeightSmoothDistance);
+            newAnchor2pos.y = GetPerlinElevation(new Vector2(newAnchor2pos.x, newAnchor2pos.z), roadHeightSmoothDistance);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(newAnchor1, newAnchor1pos, true);
+            roadMeshCreator.pathCreator.bezierPath.MovePoint(newAnchor2, newAnchor2pos, true);
 
             // Update road mesh
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
