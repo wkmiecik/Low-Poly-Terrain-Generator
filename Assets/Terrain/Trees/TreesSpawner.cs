@@ -18,22 +18,23 @@ public class TreesSpawner : MonoBehaviour
         List<Vector3> pointsToAvoid,
         float pointsAvoidDistance,
         List<GameObject> toDelete,
+        bool animate = false,
         int seed = 100)
     {
         rng = new RandomNumbers(seed);
 
         RaycastHit hit;
 
-        var samples = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges));
+        var samples = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges), seed: seed);
 
         //Add uniformly-spaced points
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(400 * Time.deltaTime) == 0) 
+            if (i % Mathf.CeilToInt(200 * Time.deltaTime) == 0 && animate) 
                 yield return null;
 
             var prefab = treePrefabs[rng.Range(0, treePrefabs.Count)];
-            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges/2, 50, samples[i].y + distanceFromEdges/2);
+            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges/2, 100, samples[i].y + distanceFromEdges/2);
 
             if (Physics.Raycast(rayStartPos, -Vector3.up, out hit))
             {
@@ -56,15 +57,17 @@ public class TreesSpawner : MonoBehaviour
 
                 if (spawn)
                 {
-                    toDelete.Add(SpawnTree(prefab, hit.point + Vector3.up));
+                    toDelete.Add(Spawn(prefab, hit.point + Vector3.up, animate));
                 }
             }
         }
     }
 
 
-    private GameObject SpawnTree(GameObject prefab, Vector3 pos)
+    private GameObject Spawn(GameObject prefab, Vector3 pos, bool animate)
     {
+        var seedSave = rng.seed;
+
         var rot = Quaternion.Euler(rng.Range(-5, 5), rng.Range(0, 360), rng.Range(-5, 5));
         var scale = new Vector3(1 + rng.Range(0.1f, 0.4f), 1 + rng.Range(0.1f, 0.4f), 1 + rng.Range(0.1f, 0.4f));
 
@@ -76,8 +79,17 @@ public class TreesSpawner : MonoBehaviour
         mat.color = gradient.Evaluate(rng.Range(0f, 1f));
         meshRenderer.materials[0] = mat;
 
-        obj.transform.localScale = Vector3.zero;
-        obj.transform.DOScale(scale, .3f);
+        if (animate)
+        {
+            obj.transform.localScale = Vector3.zero;
+            obj.transform.DOScale(scale, .3f);
+        }
+        else
+        {
+            obj.transform.localScale = scale;
+        }
+
+        rng.seed = seedSave;
         return obj;
     }
 }

@@ -60,17 +60,34 @@ public class RoadMeshCreator : MonoBehaviour
         }
     }
 
-    public void UpdateMesh()
+    public bool UpdateMesh(float fill = 1)
     {
-        CreateRoadMesh();
+        int len = Mathf.CeilToInt(pathCreator.path.NumPoints * fill);
+
+        if (len < 1) return false;
+
+        var points = new Vector3[len];
+        var tangents = new Vector3[len];
+        var normals = new Vector3[len];
+
+        for (int i = 0; i < len; i++)
+        {
+            points[i] = pathCreator.path.GetPoint(i);
+            tangents[i] = pathCreator.path.GetTangent(i);
+            normals[i] = pathCreator.path.GetNormal(i);
+        }
+        CreateRoadMesh(points, tangents, normals);
+
         transform.position = new Vector3(0, heightOffset, 0);
+        return true;
     }
 
-    void CreateRoadMesh()
-    {
-        Vector3[] verts = new Vector3[(pathCreator.path.NumPoints * 8) + 8];
 
-        int numTris = 2 * (pathCreator.path.NumPoints - 1) + ((pathCreator.path.isClosedLoop) ? 2 : 0);
+    void CreateRoadMesh(Vector3[] points, Vector3[] tangents, Vector3[] normals)
+    {
+        Vector3[] verts = new Vector3[(points.Length * 8) + 8];
+
+        int numTris = 2 * (points.Length - 1) + (pathCreator.path.isClosedLoop ? 2 : 0);
         int[] roadTriangles = new int[numTris * 3];
         int[] sideOfRoadTriangles = new int[numTris * 2 * 3];
         int[] capTriangles = new int[12];
@@ -78,21 +95,17 @@ public class RoadMeshCreator : MonoBehaviour
         int vertIndex = 0;
         int triIndex = 0;
 
-        // Vertices for the top of the road are layed out:
-        // 0  1
-        // 8  9
-        // and so on... So the triangle map 0,8,1 for example, defines a triangle from top left to bottom left to bottom right.
         int[] triangleMap = { 0, 8, 1, 1, 8, 9 };
         int[] sidesTriangleMap = { 4, 6, 14, 12, 4, 14, 5, 15, 7, 13, 15, 5 };
 
-        for (int i = 0; i < pathCreator.path.NumPoints; i++)
+        for (int i = 0; i < points.Length; i++)
         {
-            Vector3 localUp = (flattenSurface) ? pathCreator.path.up : Vector3.Cross(pathCreator.path.GetTangent(i), pathCreator.path.GetNormal(i));
-            Vector3 localRight = (flattenSurface) ? Vector3.Cross(localUp, pathCreator.path.GetTangent(i)) : pathCreator.path.GetNormal(i);
+            Vector3 localUp = (flattenSurface) ? pathCreator.path.up : Vector3.Cross(tangents[i], normals[i]);
+            Vector3 localRight = (flattenSurface) ? Vector3.Cross(localUp, tangents[i]) : normals[i];
 
             // Find position to left and right of current path vertex
-            Vector3 vertSideA = pathCreator.path.GetPoint(i) - localRight * Mathf.Abs(roadWidth);
-            Vector3 vertSideB = pathCreator.path.GetPoint(i) + localRight * Mathf.Abs(roadWidth);
+            Vector3 vertSideA = points[i] - localRight * Mathf.Abs(roadWidth);
+            Vector3 vertSideB = points[i] + localRight * Mathf.Abs(roadWidth);
 
             // Add top of road vertices
             verts[vertIndex + 0] = vertSideA;
@@ -108,7 +121,7 @@ public class RoadMeshCreator : MonoBehaviour
             verts[vertIndex + 7] = verts[vertIndex + 3];
 
             // Set triangle indices
-            if (i < pathCreator.path.NumPoints - 1 || pathCreator.path.isClosedLoop)
+            if (i < points.Length - 1 || pathCreator.path.isClosedLoop)
             {
                 for (int j = 0; j < triangleMap.Length; j++)
                 {
@@ -147,8 +160,6 @@ public class RoadMeshCreator : MonoBehaviour
         capTriangles[9] = verts.Length - 6;
         capTriangles[10] = verts.Length - 7;
         capTriangles[11] = verts.Length - 8;
-
-        //Debug.DrawLine(verts[viewedVertexIndex], verts[viewedVertexIndex] + (Vector3.up * 30), Color.red);
 
         mesh.Clear();
         mesh.vertices = verts;

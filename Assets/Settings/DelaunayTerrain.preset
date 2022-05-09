@@ -26,14 +26,10 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: seed
-    value: 38
+    value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: xsize
-    value: 300
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: ysize
+    propertyPath: size
     value: 300
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -50,23 +46,19 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: elevationScale
-    value: 170
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: sampleSize
-    value: 1
+    value: 250
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: octaves
-    value: 8
+    value: 9
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: frequencyBase
-    value: 1.4
+    propertyPath: noiseFrequency
+    value: 49
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: persistence
-    value: 1.23
+    value: 0.5
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: chunkPrefab
@@ -86,11 +78,11 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: topLayerSize
-    value: 9
+    value: 13
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: bottomLayerSize
-    value: 60
+    value: 120
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: roadMeshCreator
@@ -98,11 +90,11 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: roadSmoothDistance
-    value: 50
+    value: 45
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: smoothMinValue
-    value: 0.58
+    propertyPath: roadHeightSmoothDistance
+    value: 30
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: treeMinPointRadius
@@ -122,7 +114,7 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: houseDistanceFromPath
-    value: 35
+    value: 45
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: houseDistanceFromEdge

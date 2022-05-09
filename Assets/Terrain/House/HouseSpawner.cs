@@ -11,7 +11,14 @@ public class HouseSpawner : MonoBehaviour
 
     private RandomNumbers rng;
 
-    public GameObject Generate(float xsize, float ysize, List<Vector3> pointsToAvoid, float houseDistanceFromPath, int houseDistanceFromEdge, int seed = 100)
+    public GameObject Generate(
+        float xsize, 
+        float ysize,
+        List<Vector3> pointsToAvoid, 
+        float houseDistanceFromPath,
+        int houseDistanceFromEdge,
+        bool animate = false,
+        int seed = 100)
     {
         rng = new RandomNumbers(seed);
 
@@ -25,6 +32,7 @@ public class HouseSpawner : MonoBehaviour
 
         for (int i = 0; i < maxAttempts; i++)
         {
+            if (pointsToAvoid.Count < 17) return null;
             var pointIndex = rng.Range(8, pointsToAvoid.Count - 8);
 
             var heigth = pointsToAvoid[pointIndex].y;
@@ -59,7 +67,7 @@ public class HouseSpawner : MonoBehaviour
 
             if (rotationDiff < 3 && distanceFromTopBottom && distanceFromLeftRight)
             {
-                var obj = SpawnHouse(spawnPoint, rotation1);
+                var obj = SpawnHouse(spawnPoint, rotation1, animate);
                 pointsToAvoid.Add(spawnPoint);
                 pointsToAvoid.Add(spawnPoint + new Vector3(perpendicularBack.x, 0, perpendicularBack.y) * 23);
                 pointsToAvoid.Add(spawnPoint + Vector3.left * 23);
@@ -73,7 +81,7 @@ public class HouseSpawner : MonoBehaviour
     }
 
 
-    private GameObject SpawnHouse(Vector3 pos, float rotEulerY)
+    private GameObject SpawnHouse(Vector3 pos, float rotEulerY, bool animate = false)
     {
         var rot = Quaternion.Euler(new Vector3(0, rotEulerY, 0));
         var scale = Vector3.one;
@@ -81,8 +89,16 @@ public class HouseSpawner : MonoBehaviour
         var obj = Instantiate(prefab, pos, rot);
         obj.transform.parent = transform;
 
-        obj.transform.localScale = new Vector3(0,0,0);
-        obj.transform.DOScale(scale, .3f);
+        if (animate)
+        {
+            obj.transform.localScale = Vector3.zero;
+            obj.transform.DOScale(scale, .3f);
+        }
+        else
+        {
+            obj.transform.localScale = scale;
+        }
+
         return obj;
     }
 }

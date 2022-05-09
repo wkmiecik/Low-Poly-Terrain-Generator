@@ -2,12 +2,11 @@ using System;
 
 public class RandomNumbers
 {
-    private uint seed;
+    public uint seed;
 
-    public RandomNumbers(int seed = 0)
+    public RandomNumbers(int seed = 1)
     {
-        this.seed = (uint)seed;
-        if (seed == 0) this.seed = 504500733;
+        this.seed = (uint)seed + 2147483647;
     }
 
     public int Range(int min, int max)

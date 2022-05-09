@@ -4,6 +4,7 @@ using TriangleNet.Geometry;
 using TriangleNet.Topology;
 using TriangleNet.Meshing;
 using DG.Tweening;
+using System.Collections;
 
 public class DelaunayTerrain : MonoBehaviour {
     [Header("Terrain")]
@@ -21,7 +22,6 @@ public class DelaunayTerrain : MonoBehaviour {
     public int trianglesInChunk = 20000;
 
     public float elevationScale = 170.0f;
-    private float sampleSize = 1.0f;
     public int octaves = 8;
     public float noiseFrequency = 1.4f;
     private float frequencyBase;
@@ -49,6 +49,8 @@ public class DelaunayTerrain : MonoBehaviour {
     public RoadMeshCreator roadMeshCreator;
     public float roadSmoothDistance = 70;
     public float roadHeightSmoothDistance = 20f;
+    [Range(0,1)]
+    public float roadFill = 1f;
 
     [Header("Trees")]
     public float treeMinPointRadius = 18;
@@ -68,12 +70,21 @@ public class DelaunayTerrain : MonoBehaviour {
 
     [Header("Generation steps")]
     public bool generateBase = true;
-    public bool generateRoad = true;
-    public bool generateHouse = true;
     public bool generateRocks = true;
     public bool generateTrees = true;
+    public bool generateRoad = true;
+    public bool generateHouse = true;
 
-    private List<GameObject> toDelete = new List<GameObject>();
+    [Header("Generation animations")]
+    public bool generateBaseAnimation = true;
+    public bool generateRocksAnimation = true;
+    public bool generateTreesAnimation = true;
+    public bool generateRoadAnimation = true;
+    public bool generateHouseAnimation = true;
+
+
+    // Regenerating
+    private List<GameObject> toDeleteList = new List<GameObject>();
 
     private void Start()
     {
@@ -85,7 +96,7 @@ public class DelaunayTerrain : MonoBehaviour {
         regenerate = true;
     }
 
-    void Update() 
+    void FixedUpdate() 
     {
         if (regenerate) 
         {
@@ -96,11 +107,11 @@ public class DelaunayTerrain : MonoBehaviour {
             DOTween.Clear();
 
             // Delete everything on delete list
-            foreach (var gameObject in toDelete) 
+            foreach (var gameObject in toDeleteList) 
             {
                 Destroy(gameObject);
             }
-            toDelete.Clear();
+            toDeleteList.Clear();
 
             // Reset road
             roadMeshCreator.pathCreator.bezierPath = new PathCreation.BezierPath(new Vector3(xsize / 2, 0, ysize / 2));
@@ -121,7 +132,7 @@ public class DelaunayTerrain : MonoBehaviour {
 
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
 
-            Generate();
+            StartCoroutine(Generate());
         }
     }
 
@@ -133,17 +144,19 @@ public class DelaunayTerrain : MonoBehaviour {
             xsize = size;
             ysize = size;
             frequencyBase = noiseFrequency / 100;
-            sampleSize = size;
 
             regenerate = true;
         }
     }
 
-    public virtual void Generate() 
+    public IEnumerator Generate() 
     {
+        yield return new WaitForFixedUpdate();
+
         var rng = new RandomNumbers(seed);
 
-        Polygon polygon = new Polygon();
+        edgeVertices = new List<Vertex>();
+        var polygon = new Polygon();
 
         elevations = new List<float>();
         seeds = new float[octaves];
@@ -180,12 +193,20 @@ public class DelaunayTerrain : MonoBehaviour {
             roadMeshCreator.pathCreator.bezierPath.MovePoint(newAnchor1, newAnchor1pos, true);
             roadMeshCreator.pathCreator.bezierPath.MovePoint(newAnchor2, newAnchor2pos, true);
 
-            // Update road mesh
+            // Update road path
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
-            roadMeshCreator.UpdateMesh();
 
-            // Generate points spaced along path
-            pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
+            // Create road mesh
+            if (roadMeshCreator.UpdateMesh(roadFill))
+            {
+                // Generate points spaced along path
+                pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
+                pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.1f)));
+            } 
+            else
+            {
+                roadMeshCreator.gameObject.SetActive(false);
+            }
         } 
         else
         {
@@ -195,41 +216,17 @@ public class DelaunayTerrain : MonoBehaviour {
         // Spawn house
         if (generateHouse)
         {
-            var houseObj = house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, seed);
-            if (houseObj != null) toDelete.Add(houseObj);
-        }
-
-        // Spawn trees
-        if (generateTrees)
-        {
-            StartCoroutine(treesSpawner.Generate(
-                xsize,
-                ysize,
-                treeMinPointRadius,
-                treeDistanceFromEdges,
-                pointsToAvoid,
-                roadMeshCreator.roadWidth + minPointRadius + 6,
-                toDelete,
-                seed));
-        }
-
-        // Spawn rocks
-        if (generateRocks)
-        {
-            StartCoroutine(rocksSpawner.Generate(
-                xsize,
-                ysize,
-                rockMinPointRadius,
-                rockDistanceFromEdges,
-                pointsToAvoid,
-                roadMeshCreator.roadWidth + 4,
-                toDelete,
-                seed));
+            var houseObj = house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, generateHouseAnimation, seed);
+            if (houseObj != null)
+            {
+                toDeleteList.Add(houseObj);
+                generateHouseAnimation = false;
+            }
         }
 
 
         //Add uniformly-spaced points
-        foreach (Vector2 sample in PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize, ysize)))
+        foreach (Vector2 sample in PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize, ysize), seed: seed))
         {
             polygon.Add(new Vertex((double)sample.x, (double)sample.y));
         }
@@ -254,9 +251,7 @@ public class DelaunayTerrain : MonoBehaviour {
             // Base height from perlin noise
             float elevation = GetPerlinElevation(new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y));
 
-            //var point = roadMeshCreator.pathCreator.path.GetClosestPointOnPath(mesh.vertices[i]);
             // Fix height along path
-            // Possible optimization: save 2 closest point and calculate average height from them. Could then decrease amount of points on road.
             var roadWidth = roadMeshCreator.roadWidth + minPointRadius + 6;
             if (pointsToAvoid.Count > 0)
             {
@@ -287,14 +282,8 @@ public class DelaunayTerrain : MonoBehaviour {
 
             elevations.Add(elevation);
         }
-        //foreach (var item in pointsToAvoid)
-        //{
-        //    Debug.DrawLine(item, item + Vector3.up * 20, Color.red, 15);
-        //}
-
 
         // Collect all vertices on the edge of terrain for generatig base
-        edgeVertices = new List<Vertex>();
         for (int i = 0; i < mesh.vertices.Count; i++)
         {
             if (mesh.vertices[i].label == 1)
@@ -303,8 +292,7 @@ public class DelaunayTerrain : MonoBehaviour {
             }
         }
 
-
-        // Make terrain mesh
+        // Make terrain surface mesh
         MakeMesh();
 
         // Make base meshes
@@ -315,7 +303,41 @@ public class DelaunayTerrain : MonoBehaviour {
             terrainBase.ysize = ysize;
             terrainBase.topLayerSize = topLayerSize;
             terrainBase.bottomLayerSize = bottomLayerSize;
-            toDelete.AddRange(terrainBase.MakeBase(edgeVertices));
+            toDeleteList.AddRange(terrainBase.MakeBase(edgeVertices));
+        }
+
+        // Spawn rocks
+        if (generateRocks)
+        {
+            StartCoroutine(rocksSpawner.Generate(
+                xsize,
+                ysize,
+                rockMinPointRadius,
+                rockDistanceFromEdges,
+                pointsToAvoid,
+                roadMeshCreator.roadWidth + 4,
+                toDeleteList,
+                generateRocksAnimation,
+                seed)
+            );
+            generateRocksAnimation = false;
+        }
+
+        // Spawn trees
+        if (generateTrees)
+        {
+            StartCoroutine(treesSpawner.Generate(
+                xsize,
+                ysize,
+                treeMinPointRadius,
+                treeDistanceFromEdges,
+                pointsToAvoid,
+                roadMeshCreator.roadWidth + minPointRadius + 6,
+                toDeleteList,
+                generateTreesAnimation,
+                seed)
+            );
+            generateTreesAnimation = false;
         }
     }
 
@@ -347,8 +369,8 @@ public class DelaunayTerrain : MonoBehaviour {
 
         for (int o = 0; o < octaves; o++)
         {
-            float sample = (Mathf.PerlinNoise(seeds[o] + point.x * sampleSize / xsize * frequency,
-                                              seeds[o] + point.y * sampleSize / ysize * frequency) - 0.5f) * amplitude;
+            float sample = (Mathf.PerlinNoise(seeds[o] + point.x * size / xsize * frequency,
+                                              seeds[o] + point.y * size / ysize * frequency) - 0.5f) * amplitude;
             elevation += sample;
             maxVal += amplitude;
             amplitude /= persistence;
@@ -407,9 +429,12 @@ public class DelaunayTerrain : MonoBehaviour {
             chunkMesh.triangles = triangles.ToArray();
             chunkMesh.normals = normals.ToArray();
 
+            chunkMesh.MarkModified();
+
             Transform chunk = Instantiate<Transform>(chunkPrefab, transform.position, transform.rotation, transform);
-            toDelete.Add(chunk.gameObject);
+            toDeleteList.Add(chunk.gameObject);
             chunk.GetComponent<MeshFilter>().mesh = chunkMesh;
+            chunk.GetComponent<MeshCollider>().sharedMesh = null;
             chunk.GetComponent<MeshCollider>().sharedMesh = chunkMesh;
         }
     }

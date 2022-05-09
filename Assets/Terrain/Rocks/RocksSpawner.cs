@@ -20,22 +20,23 @@ public class RocksSpawner : MonoBehaviour
         List<Vector3> pointsToAvoid,
         float pointsAvoidDistance,
         List<GameObject> toDelete,
+        bool animate = false,
         int seed = 100)
     {
         rng = new RandomNumbers(seed);
 
         RaycastHit hit;
 
-        var samples = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges));
+        var samples = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges), seed: seed);
 
         // Add uniformly-spaced rocks
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(400 * Time.deltaTime) == 0) 
+            if (i % Mathf.CeilToInt(200 * Time.deltaTime) == 0 && animate) 
                 yield return null;
 
             var prefab = rockPrefabs[rng.Range(0, rockPrefabs.Count)];
-            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 50, samples[i].y + distanceFromEdges / 2);
+            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 100, samples[i].y + distanceFromEdges / 2);
 
             if (Physics.Raycast(rayStartPos, Vector3.down, out hit))
             {
@@ -51,18 +52,18 @@ public class RocksSpawner : MonoBehaviour
 
                 if (spawn)
                 {
-                    toDelete.Add(SpawnTree(prefab, hit.point));
+                    toDelete.Add(Spawn(prefab, hit.point, animate));
                 }
             }
         }
 
         // Add base rocks
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < 10; i++)
         {
-            RaycastOnBase(new Vector3(-50, rng.Range(-70, 50), rng.Range(0, xsize)), Vector3.right);
-            RaycastOnBase(new Vector3(xsize + 50, rng.Range(-70, 50), rng.Range(0, xsize)), Vector3.left);
-            RaycastOnBase(new Vector3(rng.Range(0, ysize), rng.Range(-70, 50), -50), Vector3.forward);
-            RaycastOnBase(new Vector3(rng.Range(0, ysize), rng.Range(-70, 50), ysize + 50), Vector3.back);
+            RaycastOnBase(new Vector3(-50, rng.Range(-120, 70), rng.Range(0, xsize)), Vector3.right);
+            RaycastOnBase(new Vector3(xsize + 50, rng.Range(-120, 70), rng.Range(0, xsize)), Vector3.left);
+            RaycastOnBase(new Vector3(rng.Range(0, ysize), rng.Range(-120, 70), -50), Vector3.forward);
+            RaycastOnBase(new Vector3(rng.Range(0, ysize), rng.Range(-120, 70), ysize + 50), Vector3.back);
         }
 
         void RaycastOnBase(Vector3 rayStartPos, Vector3 dir)
@@ -73,19 +74,22 @@ public class RocksSpawner : MonoBehaviour
             {
                 if (hit.collider.CompareTag(baseTag))
                 {
-                    toDelete.Add(SpawnTree(prefab, hit.point, 3.5f, 4.5f));
+                    toDelete.Add(Spawn(prefab, hit.point, animate, 3.5f, 4.5f));
                 }
             }
         }
     }
 
 
-    private GameObject SpawnTree(GameObject prefab, Vector3 pos, float minScale = 2f, float maxScale = 3f)
+    private GameObject Spawn(GameObject prefab, Vector3 pos, bool animate, float minScale = 2f, float maxScale = 3f)
     {
+        var seedSave = rng.seed;
+
         var rot = Quaternion.Euler(rng.Range(0, 360), rng.Range(0, 360), rng.Range(0, 360));
         var scale = new Vector3(1 + rng.Range(minScale, maxScale), 1 + rng.Range(minScale, maxScale), 1 + rng.Range(minScale, maxScale));
 
-        var obj = Instantiate(prefab, pos, rot);
+        var obj = Instantiate(prefab, transform, true);
+        obj.transform.SetPositionAndRotation(pos, rot);
         obj.transform.parent = transform;
 
         var meshRenderer = obj.GetComponent<MeshRenderer>();
@@ -93,9 +97,16 @@ public class RocksSpawner : MonoBehaviour
         mat.color = gradient.Evaluate(rng.Range(0f, 1f));
         meshRenderer.materials[0] = mat;
 
+        if (animate)
+        {
+            obj.transform.localScale = Vector3.zero;
+            obj.transform.DOScale(scale, .5f);
+        } else
+        {
+            obj.transform.localScale = scale;
+        }
 
-        obj.transform.localScale = Vector3.zero;
-        obj.transform.DOScale(scale, .5f);
+        rng.seed = seedSave;
         return obj;
     }
 }
