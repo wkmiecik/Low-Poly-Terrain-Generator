@@ -6,7 +6,7 @@ using TriangleNet.Meshing;
 using DG.Tweening;
 using System.Collections;
 
-public class DelaunayTerrain : MonoBehaviour {
+public class LowPolyTerrain : MonoBehaviour {
     [Header("Terrain")]
     public int seed = 0;
     float[] seeds;
@@ -17,15 +17,15 @@ public class DelaunayTerrain : MonoBehaviour {
 
     public float minPointRadius = 12f;
 
-    public int randomPoints = 0;
+    public int randomPoints = 30;
 
     public int trianglesInChunk = 20000;
 
-    public float elevationScale = 170.0f;
-    public int octaves = 8;
-    public float noiseFrequency = 1.4f;
+    public float elevationScale = 250f;
+    public int octaves = 9;
+    public float noiseFrequency = 49f;
     private float frequencyBase;
-    public float persistence = 1.23f;
+    public float persistence = 0.5f;
 
     public Transform chunkPrefab = null;
 
@@ -33,21 +33,16 @@ public class DelaunayTerrain : MonoBehaviour {
 
     [HideInInspector] public static TriangleNet.Mesh mesh = null;
 
-    public float vertexMergeSize = 0;
-    public float vertexEdgeMergeDistance = 0;
-
-    [SerializeField] bool regenerate = false;
-
     private static List<Vertex> edgeVertices;
     private TerrainBase terrainBase;
 
     [Header("Base")]
-    public float topLayerSize = 9;
-    public float bottomLayerSize = 60;
+    public float topLayerSize = 13;
+    public float bottomLayerSize = 120;
 
     [Header("Road")]
     public RoadMeshCreator roadMeshCreator;
-    public float roadSmoothDistance = 70;
+    public float roadSmoothDistance = 50;
     public float roadHeightSmoothDistance = 20f;
     [Range(0,1)]
     public float roadFill = 1f;
@@ -76,12 +71,14 @@ public class DelaunayTerrain : MonoBehaviour {
     public bool generateHouse = true;
 
     [Header("Generation animations")]
-    public bool generateBaseAnimation = true;
-    public bool generateRocksAnimation = true;
-    public bool generateTreesAnimation = true;
-    public bool generateRoadAnimation = true;
-    public bool generateHouseAnimation = true;
+    public bool baseAnimation = true;
+    public bool rocksAnimation = true;
+    public bool treesAnimation = true;
+    public bool roadAnimation = true;
+    public bool houseAnimation = true;
 
+    [Header("Update")]
+    public bool regenerate = false;
 
     // Regenerating
     private List<GameObject> toDeleteList = new List<GameObject>();
@@ -216,11 +213,11 @@ public class DelaunayTerrain : MonoBehaviour {
         // Spawn house
         if (generateHouse)
         {
-            var houseObj = house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, generateHouseAnimation, seed);
+            var houseObj = house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, houseAnimation, seed);
             if (houseObj != null)
             {
                 toDeleteList.Add(houseObj);
-                generateHouseAnimation = false;
+                houseAnimation = false;
             }
         }
 
@@ -317,10 +314,10 @@ public class DelaunayTerrain : MonoBehaviour {
                 pointsToAvoid,
                 roadMeshCreator.roadWidth + 4,
                 toDeleteList,
-                generateRocksAnimation,
+                rocksAnimation,
                 seed)
             );
-            generateRocksAnimation = false;
+            rocksAnimation = false;
         }
 
         // Spawn trees
@@ -334,10 +331,10 @@ public class DelaunayTerrain : MonoBehaviour {
                 pointsToAvoid,
                 roadMeshCreator.roadWidth + minPointRadius + 6,
                 toDeleteList,
-                generateTreesAnimation,
+                treesAnimation,
                 seed)
             );
-            generateTreesAnimation = false;
+            treesAnimation = false;
         }
     }
 
