@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TriangleNet.Geometry;
 using TriangleNet.Topology;
 using TriangleNet.Meshing;
 using DG.Tweening;
-using System.Collections;
 
 public class LowPolyTerrain : MonoBehaviour {
     [Header("Terrain")]
@@ -74,8 +74,12 @@ public class LowPolyTerrain : MonoBehaviour {
     public bool baseAnimation = true;
     public bool rocksAnimation = true;
     public bool treesAnimation = true;
+
     public bool roadAnimation = true;
+    private bool roadAnimationPlaying = false;
+
     public bool houseAnimation = true;
+    
 
     [Header("Update")]
     public bool regenerate = false;
@@ -167,6 +171,13 @@ public class LowPolyTerrain : MonoBehaviour {
         var pointsToAvoid = new List<Vector3>();
         if (generateRoad)
         {
+            if (roadAnimation)
+            {
+                roadFill = 0.01f;
+                roadAnimationPlaying = true;
+                roadAnimation = false;
+            }
+
             var firstPoint = new Vector2(rng.Range(30, xsize - 30), ysize - 0.015f);
             var middlePoint = new Vector2(xsize / 2 + rng.Range(-15, 15), ysize / 2 + rng.Range(-15, 15));
             var lastPoint = new Vector2(rng.Range(30, xsize - 30), 0.015f);
@@ -194,15 +205,20 @@ public class LowPolyTerrain : MonoBehaviour {
             roadMeshCreator.pathCreator.bezierPath.NotifyPathModified();
 
             // Create road mesh
-            if (roadMeshCreator.UpdateMesh(roadFill))
+            roadMeshCreator.UpdateMesh(roadFill);
+
+            // Generate points spaced along path
+            pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
+            pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.1f)));
+
+            if (roadAnimationPlaying)
             {
-                // Generate points spaced along path
-                pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
-                pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.1f)));
-            } 
-            else
-            {
-                roadMeshCreator.gameObject.SetActive(false);
+                roadFill += Time.deltaTime * 0.5f;
+                roadFill = Mathf.Clamp01(roadFill);
+                if (roadFill < 1)
+                    regenerate = true;
+                else
+                    roadAnimationPlaying = false;
             }
         } 
         else

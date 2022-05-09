@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 23247137960634504}
   - component: {fileID: 64308250482023768}
   m_Layer: 11
-  m_Name: ChunkPrefab
+  m_Name: Surface Chunk
   m_TagString: chunk
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -60,26 +60,26 @@ public class RoadMeshCreator : MonoBehaviour
         }
     }
 
-    public bool UpdateMesh(float fill = 1)
+    public void UpdateMesh(float fill = 1)
     {
         int len = Mathf.CeilToInt(pathCreator.path.NumPoints * fill);
 
-        if (len < 1) return false;
-
-        var points = new Vector3[len];
-        var tangents = new Vector3[len];
-        var normals = new Vector3[len];
-
-        for (int i = 0; i < len; i++)
+        if (len >= 1)
         {
-            points[i] = pathCreator.path.GetPoint(i);
-            tangents[i] = pathCreator.path.GetTangent(i);
-            normals[i] = pathCreator.path.GetNormal(i);
-        }
-        CreateRoadMesh(points, tangents, normals);
+            var points = new Vector3[len];
+            var tangents = new Vector3[len];
+            var normals = new Vector3[len];
 
-        transform.position = new Vector3(0, heightOffset, 0);
-        return true;
+            for (int i = 0; i < len; i++)
+            {
+                points[i] = pathCreator.path.GetPoint(i);
+                tangents[i] = pathCreator.path.GetTangent(i);
+                normals[i] = pathCreator.path.GetNormal(i);
+            }
+            CreateRoadMesh(points, tangents, normals);
+
+            transform.position = new Vector3(0, heightOffset, 0);
+        }
     }
 
 
