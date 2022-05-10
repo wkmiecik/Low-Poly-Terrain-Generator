@@ -18,7 +18,7 @@ public class TerrainBase : MonoBehaviour
     [HideInInspector] public float topLayerSize = 10;
     [HideInInspector] public float bottomLayerSize = 60;
 
-    public List<GameObject> MakeBase(List<Vertex> edgeVertices)
+    public List<GameObject> MakeBase(List<Vertex> edgeVertices, bool animate)
     {
         topLayerParent.position = new Vector3(xsize / 2, 0, ysize / 2);
         bottomLayerParent.position = new Vector3(xsize / 2, 0, ysize / 2);
@@ -66,21 +66,41 @@ public class TerrainBase : MonoBehaviour
         }
 
         // Return list
-        var gameObjects = new List<GameObject>();
+        var chunks = new List<GameObject>();
 
         // Make top layer
-        gameObjects.Add(MakeMeshFromPolygon(xPlusPolygonTop, new Vector3(xsize, 0, 0), Quaternion.Euler(0, 0, 90), true, false, false));
-        gameObjects.Add(MakeMeshFromPolygon(xMinusPolygonTop, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 90), true, true, false));
-        gameObjects.Add(MakeMeshFromPolygon(yPlusPolygonTop, new Vector3(0, 0, ysize), Quaternion.Euler(-90, 0, 0), true, false, true));
-        gameObjects.Add(MakeMeshFromPolygon(yMinusPolygonTop, new Vector3(0, 0, 0), Quaternion.Euler(-90, 0, 0), true, true, true));
+        chunks.Add(MakeMeshFromPolygon(xPlusPolygonTop, new Vector3(xsize, 0, 0), Quaternion.Euler(0, 0, 90), true, false, false));
+        chunks.Add(MakeMeshFromPolygon(xMinusPolygonTop, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 90), true, true, false));
+        chunks.Add(MakeMeshFromPolygon(yPlusPolygonTop, new Vector3(0, 0, ysize), Quaternion.Euler(-90, 0, 0), true, false, true));
+        chunks.Add(MakeMeshFromPolygon(yMinusPolygonTop, new Vector3(0, 0, 0), Quaternion.Euler(-90, 0, 0), true, true, true));
 
         // Make bottom layer
-        gameObjects.Add(MakeMeshFromPolygon(xPlusPolygon, new Vector3(xsize, 0, 0), Quaternion.Euler(0, 0, 90), false, false, false));
-        gameObjects.Add(MakeMeshFromPolygon(xMinusPolygon, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 90), false, true, false));
-        gameObjects.Add(MakeMeshFromPolygon(yPlusPolygon, new Vector3(0, 0, ysize), Quaternion.Euler(-90, 0, 0), false, false, true));
-        gameObjects.Add(MakeMeshFromPolygon(yMinusPolygon, new Vector3(0, 0, 0), Quaternion.Euler(-90, 0, 0), false, true, true));
+        chunks.Add(MakeMeshFromPolygon(xPlusPolygon, new Vector3(xsize, 0, 0), Quaternion.Euler(0, 0, 90), false, false, false));
+        chunks.Add(MakeMeshFromPolygon(xMinusPolygon, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 90), false, true, false));
+        chunks.Add(MakeMeshFromPolygon(yPlusPolygon, new Vector3(0, 0, ysize), Quaternion.Euler(-90, 0, 0), false, false, true));
+        chunks.Add(MakeMeshFromPolygon(yMinusPolygon, new Vector3(0, 0, 0), Quaternion.Euler(-90, 0, 0), false, true, true));
 
-        return gameObjects;
+        if (animate)
+        {
+            foreach (var chunk in chunks)
+            {
+                if (chunk.transform.localRotation.eulerAngles.x == 270)
+                {
+                    chunk.transform.localScale = new Vector3(1, 1, 0);
+                    chunk.transform.DOScaleZ(1, .4f);
+                }
+                else
+                {
+                    chunk.transform.localScale = new Vector3(0, 1, 1);
+                    chunk.transform.DOScaleX(1, .4f);
+                }
+
+                chunk.transform.position = chunk.transform.position + Vector3.down * 40;
+                chunk.transform.DOMoveY(0, .4f);
+            }
+        }
+
+        return chunks;
     }
 
     private GameObject MakeMeshFromPolygon(Polygon polygon, Vector3 pos, Quaternion rot, bool topLayer, bool flip = false, bool yAxis = false)

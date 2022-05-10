@@ -22,7 +22,7 @@ public class HouseSpawner : MonoBehaviour
     {
         rng = new RandomNumbers(seed);
 
-        int maxAttempts = 30;
+        int maxAttempts = 100;
 
         // Spawn in random position if there is no road
         if (pointsToAvoid.Count == 0)

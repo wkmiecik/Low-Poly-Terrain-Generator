@@ -9,10 +9,11 @@ public class House : MonoBehaviour
     public float spawnDelay = 1f;
     private float timer;
 
-    RandomNumbers rng = new RandomNumbers(123);
+    RandomNumbers rng;
 
     private void Start()
     {
+        rng = new RandomNumbers(GetInstanceID());
         timer = spawnDelay;
     }
 
@@ -20,7 +21,7 @@ public class House : MonoBehaviour
     {
         if (timer <= 0)
         {
-            timer = spawnDelay;
+            timer = spawnDelay + rng.Range(-0.1f, 0.5f);
             var obj = Instantiate(smokePrefabs[rng.Range(0, smokePrefabs.Count - 1)], spawnPosition.transform.position, Quaternion.identity, transform);
         }
 

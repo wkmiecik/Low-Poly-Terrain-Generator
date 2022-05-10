@@ -209,11 +209,11 @@ public class LowPolyTerrain : MonoBehaviour {
 
             // Generate points spaced along path
             pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
-            pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.1f)));
+            pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.25f)));
 
             if (roadAnimationPlaying)
             {
-                roadFill += Time.deltaTime * 0.5f;
+                roadFill += Time.deltaTime * 0.9f;
                 roadFill = Mathf.Clamp01(roadFill);
                 if (roadFill < 1)
                     regenerate = true;
@@ -316,7 +316,9 @@ public class LowPolyTerrain : MonoBehaviour {
             terrainBase.ysize = ysize;
             terrainBase.topLayerSize = topLayerSize;
             terrainBase.bottomLayerSize = bottomLayerSize;
-            toDeleteList.AddRange(terrainBase.MakeBase(edgeVertices));
+            toDeleteList.AddRange(terrainBase.MakeBase(edgeVertices, baseAnimation));
+
+            baseAnimation = false;
         }
 
         // Spawn rocks
