@@ -31,7 +31,7 @@ public class LowPolyTerrain : MonoBehaviour {
 
     private List<float> elevations;
 
-    [HideInInspector] public static TriangleNet.Mesh mesh = null;
+    [HideInInspector] public TriangleNet.Mesh mesh = null;
 
     private static List<Vertex> edgeVertices;
     private TerrainBase terrainBase;
@@ -62,6 +62,9 @@ public class LowPolyTerrain : MonoBehaviour {
     public int houseDistanceFromEdge = 35;
     private HouseSpawner house;
 
+    [Header("River")]
+    private RiverSpawner riverSpawner;
+
 
     [Header("Generation steps")]
     public bool generateBase = true;
@@ -69,6 +72,7 @@ public class LowPolyTerrain : MonoBehaviour {
     public bool generateTrees = true;
     public bool generateRoad = true;
     public bool generateHouse = true;
+    public bool generateRiver = true;
 
     [Header("Generation animations")]
     public bool baseAnimation = true;
@@ -93,6 +97,7 @@ public class LowPolyTerrain : MonoBehaviour {
         treesSpawner = GetComponentInChildren<TreesSpawner>();
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
         house = GetComponentInChildren<HouseSpawner>();
+        riverSpawner = GetComponentInChildren<RiverSpawner>();
 
         regenerate = true;
     }
@@ -305,8 +310,23 @@ public class LowPolyTerrain : MonoBehaviour {
             }
         }
 
+
         // Make terrain surface mesh
         MakeMesh();
+
+
+        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        // Make river
+        if (generateRiver)
+        {
+            RiverSpawner.xsize = xsize;
+            RiverSpawner.ysize = ysize;
+            RiverSpawner.mesh = mesh;
+            RiverSpawner.edgeVertices = edgeVertices;
+            RiverSpawner.elevations = elevations;
+            riverSpawner.Generate();
+        }
+
 
         // Make base meshes
         if (generateBase)
