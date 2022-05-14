@@ -12,11 +12,12 @@ public class HouseSpawner : MonoBehaviour
     private RandomNumbers rng;
 
     public GameObject Generate(
-        float xsize, 
+        float xsize,
         float ysize,
-        List<Vector3> pointsToAvoid, 
+        List<Vector3> pointsToAvoid,
         float houseDistanceFromPath,
         int houseDistanceFromEdge,
+        bool leftSide,
         bool animate = false,
         int seed = 100)
     {
@@ -48,7 +49,7 @@ public class HouseSpawner : MonoBehaviour
             var rotation2 = Mathf.Atan2(perpendicularFront.x, perpendicularFront.y) * Mathf.Rad2Deg;
 
             float rotationDiff;
-            if (rng.Bool())
+            if (!leftSide)
             {
                 point += (perpendicularBack * houseDistanceFromPath);
                 rotationDiff = rotation1 - rotation2;

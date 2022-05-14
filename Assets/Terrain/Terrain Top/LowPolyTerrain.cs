@@ -37,56 +37,56 @@ public class LowPolyTerrain : MonoBehaviour {
     private TerrainBase terrainBase;
 
     [Header("Base")]
+    public bool generateBase = true;
+    public bool baseAnimation = true;
     public float topLayerSize = 13;
     public float bottomLayerSize = 120;
 
     [Header("Road")]
+    public bool generateRoad = true;
+    public bool roadAnimation = true;
+    private bool roadAnimationPlaying = false;
     public PathMeshCreator roadMeshCreator;
     public float roadSmoothDistance = 50;
     public float roadHeightSmoothDistance = 20f;
     [Range(0, 1)]
     public float roadFill = 1f;
 
+    [Header("Lamps")]
+    public bool generateLamps = true;
+    public bool lampsAnimation = true;
+    public int lampsGenerateEveryNthPoint = 6;
+    public float lampsDistanceFromRoad = 15;
+    private LampsSpawner lampsSpawner;
+
     [Header("Trees")]
+    public bool generateTrees = true;
+    public bool treesAnimation = true;
     public float treeMinPointRadius = 18;
     public float treeDistanceFromEdges = 6;
     private TreesSpawner treesSpawner;
 
     [Header("Rocks")]
+    public bool generateRocks = true;
+    public bool rocksAnimation = true;
     public float rockMinPointRadius = 47;
     public float rockDistanceFromEdges = 6;
     private RocksSpawner rocksSpawner;
 
     [Header("House")]
+    public bool generateHouse = true;
+    public bool houseAnimation = true;
     public float houseDistanceFromPath = 45;
     public int houseDistanceFromEdge = 35;
     private HouseSpawner house;
 
     [Header("River")]
+    public bool generateRiver = true;
     public float riverFlatDistance = 5;
     public float riverSmoothDistance = 30;
     public float riverHeightOffset = -10;
     private RiverSpawner riverSpawner;
 
-
-    [Header("Generation steps")]
-    public bool generateBase = true;
-    public bool generateRocks = true;
-    public bool generateTrees = true;
-    public bool generateRoad = true;
-    public bool generateHouse = true;
-    public bool generateRiver = true;
-
-    [Header("Generation animations")]
-    public bool baseAnimation = true;
-    public bool rocksAnimation = true;
-    public bool treesAnimation = true;
-
-    public bool roadAnimation = true;
-    private bool roadAnimationPlaying = false;
-
-    public bool houseAnimation = true;
-    
 
     [Header("Update")]
     public bool regenerate = false;
@@ -97,6 +97,7 @@ public class LowPolyTerrain : MonoBehaviour {
     private void Start()
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
+        lampsSpawner = GetComponentInChildren<LampsSpawner>();
         treesSpawner = GetComponentInChildren<TreesSpawner>();
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
         house = GetComponentInChildren<HouseSpawner>();
@@ -259,11 +260,28 @@ public class LowPolyTerrain : MonoBehaviour {
 
 
 
+        // Spawn road lights
+        if (generateLamps)
+        {
+            lampsSpawner.Generate(pointsToAvoid, lampsGenerateEveryNthPoint, lampsDistanceFromRoad, lampsAnimation, toDeleteList, seed);
+            lampsAnimation = false;
+        }
+
 
         // Spawn house
         if (generateHouse)
         {
-            var houseObj = house.Generate(xsize, ysize, pointsToAvoid, houseDistanceFromPath, houseDistanceFromEdge, houseAnimation, seed);
+            var houseObj = house.Generate(
+                xsize, 
+                ysize,
+                pointsToAvoid, 
+                houseDistanceFromPath, 
+                houseDistanceFromEdge,
+                lampsSpawner.lampsGeneratedLeftSide,
+                houseAnimation, 
+                seed
+            );
+
             if (houseObj != null)
             {
                 toDeleteList.Add(houseObj);
@@ -273,23 +291,23 @@ public class LowPolyTerrain : MonoBehaviour {
 
 
         // Generate river
-        riverSpawner.gameObject.SetActive(generateRiver);
-        if (generateRiver)
-        {
-            RiverSpawner.xsize = xsize;
-            RiverSpawner.ysize = ysize;
-            RiverSpawner.mesh = mesh;
-            RiverSpawner.edgeVertices = edgeVertices;
-            RiverSpawner.elevations = elevations;
-            RiverSpawner.riverHeightOffset = riverHeightOffset;
+        //riverSpawner.gameObject.SetActive(generateRiver);
+        //if (generateRiver)
+        //{
+        //    RiverSpawner.xsize = xsize;
+        //    RiverSpawner.ysize = ysize;
+        //    RiverSpawner.mesh = mesh;
+        //    RiverSpawner.edgeVertices = edgeVertices;
+        //    RiverSpawner.elevations = elevations;
+        //    RiverSpawner.riverHeightOffset = riverHeightOffset;
 
-            riverSpawner.Generate();
-            pointsToAvoid.Clear();
-            pointsToAvoid.AddRange(riverSpawner.pathCreator.path.GeneratePointsAlongPath(5));
+        //    riverSpawner.Generate();
+        //    pointsToAvoid.Clear();
+        //    pointsToAvoid.AddRange(riverSpawner.pathCreator.path.GeneratePointsAlongPath(5));
 
-            // Generate heights
-            GenerateHeightsForMesh(pointsToAvoid, riverFlatDistance, riverSmoothDistance);
-        }
+        //    // Generate heights
+        //    GenerateHeightsForMesh(pointsToAvoid, riverFlatDistance, riverSmoothDistance);
+        //}
 
         // Make terrain surface mesh
         MakeMesh();
