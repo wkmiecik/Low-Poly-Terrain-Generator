@@ -5,7 +5,7 @@ using TriangleNet.Geometry;
 using TriangleNet.Topology;
 using TriangleNet.Meshing;
 using DG.Tweening;
-
+using PathCreation;
 
 public class RiverSpawner : MonoBehaviour
 {
@@ -14,13 +14,19 @@ public class RiverSpawner : MonoBehaviour
     [HideInInspector] public static TriangleNet.Mesh mesh;
     [HideInInspector] public static List<Vertex> edgeVertices;
     [HideInInspector] public static List<float> elevations;
+    [HideInInspector] public static float riverHeightOffset = -10;
 
     public List<TriangleNode> triangleGraph = new List<TriangleNode>();
 
     public int seed = 0;
-    public int showVertexIndex = 0;
+    public int gCostMultiplier = 1;
+    public int hCostMultiplier = 1;
+
+    public PathMeshCreator pathMeshCreator;
+    [HideInInspector] public PathCreator pathCreator;
 
     RandomNumbers rng;
+    public bool update;
 
     public class TriangleNode
     {
@@ -34,28 +40,34 @@ public class RiverSpawner : MonoBehaviour
                 {
                     if (vert != null)
                     {
-                        sum += new Vector3((float)vert.x, (float)elevations[vert.id], (float)vert.y);
+                        sum += new Vector3((float)vert.x, (float)elevations[vert.id] + riverHeightOffset, (float)vert.y);
                     }
                 }
-                return sum / triangle.vertices.Length;
+                return (sum / triangle.vertices.Length);
             }
         }
-
-        public List<TriangleNode> neighbors
+        public List<int> neighbors
         {
             get
             {
-                var neighbors = new List<TriangleNode>();
+                var neighbors = new List<int>();
                 foreach (var neighbor in triangle.neighbors)
                 {
                     if (neighbor.Triangle.vertices[0] != null)
                     {
-                        neighbors.Add(new TriangleNode(neighbor.Triangle));
+                        neighbors.Add(neighbor.Triangle.id);
                     }
                 }
                 return neighbors;
             }
         }
+
+        public float height => center.y;
+
+        public int parent;
+        public int gCost;
+        public int hCost;
+        public int fCost => gCost + hCost;
 
 
         public TriangleNode(Triangle triangle)
@@ -63,6 +75,14 @@ public class RiverSpawner : MonoBehaviour
             this.triangle = triangle;
         }
     }
+
+
+    private void Start()
+    {
+        pathCreator = gameObject.GetComponent<PathCreator>();
+        pathMeshCreator = gameObject.GetComponent<PathMeshCreator>();
+    }
+
 
     public void Generate()
     {
@@ -79,13 +99,13 @@ public class RiverSpawner : MonoBehaviour
 
 
         // Choose one of 2/5 top vertices
-        int riverTopIndex = Mathf.FloorToInt(rng.Range(0f, (edgeLen * 2) / 5));
+        int riverTopIndex = Mathf.FloorToInt(rng.Range(0f, edgeLen / 5));
 
         // Choose one of 1/5 bottom vertices on different edge than top vertex
         int riverBottomIndex = -1;
         for (int i = 0; i < 300; i++)
         {
-            int temp = Mathf.FloorToInt(rng.Range(edgeLen - (edgeLen / 5), edgeLen - 1));
+            int temp = Mathf.FloorToInt(rng.Range(edgeLen - (edgeLen / 10), edgeLen - 1));
 
             if (edgeVertices[temp].x == 0 && edgeVertices[riverTopIndex].x == xsize)
                 riverBottomIndex = temp;
@@ -101,7 +121,11 @@ public class RiverSpawner : MonoBehaviour
         if (riverBottomIndex == -1)
         {
             Debug.Log("Could not find correct point for river ends");
+            pathMeshCreator.gameObject.SetActive(false);
             return;
+        } else
+        {
+            pathMeshCreator.gameObject.SetActive(true);
         }
 
         // Change edge indexes to mesh indexes
@@ -133,26 +157,143 @@ public class RiverSpawner : MonoBehaviour
         }
 
 
-        DrawVertex(triangleGraph[topTriangleIndex].center, Color.black);
-        foreach (var item in triangleGraph[topTriangleIndex].neighbors)
+
+        // Pathfinding
+        int searchIterationLimit = 10000;
+        int searchIterations = 0;
+        bool pathfindingSuccess = false;
+
+        var openList = new List<int>();
+        var closedList = new Dictionary<int, int>();
+
+        int previousNode = topTriangleIndex;
+        openList.Add(topTriangleIndex);
+
+        while (openList.Count != 0)
         {
-            DrawVertex(item.center, Color.red);
+            searchIterations++;
+            if (searchIterations >= searchIterationLimit)
+            {
+                Debug.LogWarning("Path iteration limit exceeded");
+                break;
+            }
+
+            // Get current node from open list
+            int currentNode = openList[0];
+            foreach (var node in openList)
+            {
+                if (triangleGraph[node].fCost < triangleGraph[currentNode].fCost || triangleGraph[node].fCost == triangleGraph[currentNode].fCost && triangleGraph[node].hCost < triangleGraph[currentNode].hCost)
+                    currentNode = node;
+            }
+
+            // Remove current node from open list and add it to close list
+            openList.Remove(currentNode);
+            closedList.Add(currentNode, previousNode);
+
+            if (currentNode == bottomTriangleIndex)
+            {
+                previousNode = currentNode;
+                pathfindingSuccess = true;
+            }
+            if (pathfindingSuccess) break;
+
+            // Find neighbors of current node and add them to open list
+            foreach (var neighbor in triangleGraph[currentNode].neighbors)
+            {
+                if (!closedList.ContainsKey(neighbor))
+                {
+                    int thisHeight = Mathf.RoundToInt(triangleGraph[currentNode].height * 10);
+                    int neighborHeight = Mathf.RoundToInt(triangleGraph[neighbor].height * 10);
+                    int movementCost = triangleGraph[currentNode].gCost + (neighborHeight - thisHeight);
+                    if (movementCost < triangleGraph[neighbor].gCost || !openList.Contains(neighbor))
+                    {
+                        triangleGraph[neighbor].gCost = movementCost * gCostMultiplier;
+                        triangleGraph[neighbor].gCost += Mathf.RoundToInt(Vector3.Distance(triangleGraph[neighbor].center, new Vector3(xsize / 2, -20, ysize / 2)) * 0.05f);
+
+                        triangleGraph[neighbor].hCost = Mathf.RoundToInt(Vector3.Distance(triangleGraph[neighbor].center, triangleGraph[bottomTriangleIndex].center) * hCostMultiplier);
+                        triangleGraph[neighbor].parent = currentNode;
+
+                        if (!openList.Contains(neighbor)) openList.Add(neighbor);
+                    }
+                }
+            }
+            previousNode = currentNode;
         }
 
-        DrawVertex(triangleGraph[bottomTriangleIndex].center, Color.green);
-        foreach (var item in triangleGraph[bottomTriangleIndex].neighbors)
+        List<Vector3> path = new List<Vector3>();
+        int currentTraceNode = bottomTriangleIndex;
+        while (currentTraceNode != topTriangleIndex)
         {
-            DrawVertex(item.center, Color.blue);
+            path.Add(triangleGraph[currentTraceNode].center);
+
+            for (int i = 0; i < 20; i++)
+            {
+                currentTraceNode = triangleGraph[currentTraceNode].parent;
+                if (currentTraceNode == topTriangleIndex) 
+                {
+                    path.Add(triangleGraph[currentTraceNode].center);
+                    break;
+                }
+            }
         }
+        path.Reverse();
+
+
+        // Path cleanup
+        if (Vector3.Distance(path[0], path[1]) < 25f) path.RemoveRange(1, 1);
+        for (int i = 0; i < path.Count; i++)
+        {
+            if (i == 0 || i == path.Count - 1)
+            {
+                if (Mathf.Abs(path[i].x - xsize) < 7) path[i] = new Vector3(xsize, path[i].y, path[i].z);
+                if (Mathf.Abs(path[i].x) < 7) path[i] = new Vector3(0, path[i].y, path[i].z);
+                if (Mathf.Abs(path[i].z - ysize) < 7) path[i] = new Vector3(path[i].x, path[i].y, ysize);
+                if (Mathf.Abs(path[i].z) < 7) path[i] = new Vector3(path[i].x, path[i].y, 0);
+            }
+            DrawVertex(path[i], Color.red);
+        }
+
+
+        // Path drawing
+        pathCreator.bezierPath = new BezierPath(path);
+        pathCreator.bezierPath.ControlPointMode = BezierPath.ControlMode.Aligned;
+
+
+        float handleDistanceFromEdge = 20;
+        if (path[0].x == xsize)
+        {
+            pathCreator.bezierPath.MovePoint(1, new Vector3(path[0].x - handleDistanceFromEdge, (path[0].y + path[1].y) / 1.5f, path[0].z), true);
+            pathCreator.bezierPath.MovePoint(pathCreator.bezierPath.NumPoints - 2, new Vector3(handleDistanceFromEdge, (path[path.Count - 1].y + path[path.Count - 2].y) / 2, path[path.Count - 1].z), true);
+        }
+        if (path[0].x == 0)
+        {
+            pathCreator.bezierPath.MovePoint(1, new Vector3(handleDistanceFromEdge, (path[0].y + path[1].y) / 1.5f, path[0].z), true);
+            pathCreator.bezierPath.MovePoint(pathCreator.bezierPath.NumPoints - 2, new Vector3(path[path.Count - 1].x - handleDistanceFromEdge, (path[path.Count - 1].y + path[path.Count - 2].y) / 2, path[path.Count - 1].z), true);
+        }
+        if (path[0].z == ysize)
+        {
+            pathCreator.bezierPath.MovePoint(1, new Vector3(path[0].x, (path[0].y + path[1].y) / 1.5f, path[0].z - handleDistanceFromEdge), true);
+            pathCreator.bezierPath.MovePoint(pathCreator.bezierPath.NumPoints - 2, new Vector3(path[path.Count - 1].x, (path[path.Count - 1].y + path[path.Count - 2].y) / 2, handleDistanceFromEdge), true);
+        }
+        if (path[0].z == 0)
+        {
+            pathCreator.bezierPath.MovePoint(1, new Vector3(path[0].x, (path[0].y + path[1].y) / 1.5f, handleDistanceFromEdge), true);
+            pathCreator.bezierPath.MovePoint(pathCreator.bezierPath.NumPoints - 2, new Vector3(path[path.Count - 1].x, (path[path.Count - 1].y + path[path.Count - 2].y) / 2, path[path.Count - 1].z - handleDistanceFromEdge), true);
+        }
+
+
+        pathCreator.bezierPath.NotifyPathModified();
+        pathMeshCreator.pathCreator = pathCreator;
+        pathMeshCreator.UpdateMesh();
     }
 
     // DEBUGGING
     private void Update()
     {
-        if (edgeVertices != null)
-        {
-            Generate();
-        }
+        //if (edgeVertices != null && update)
+        //{
+        //    Generate();
+        //}
     }
 
 

@@ -41,10 +41,10 @@ public class LowPolyTerrain : MonoBehaviour {
     public float bottomLayerSize = 120;
 
     [Header("Road")]
-    public RoadMeshCreator roadMeshCreator;
+    public PathMeshCreator roadMeshCreator;
     public float roadSmoothDistance = 50;
     public float roadHeightSmoothDistance = 20f;
-    [Range(0,1)]
+    [Range(0, 1)]
     public float roadFill = 1f;
 
     [Header("Trees")]
@@ -63,6 +63,9 @@ public class LowPolyTerrain : MonoBehaviour {
     private HouseSpawner house;
 
     [Header("River")]
+    public float riverFlatDistance = 5;
+    public float riverSmoothDistance = 30;
+    public float riverHeightOffset = -10;
     private RiverSpawner riverSpawner;
 
 
@@ -172,7 +175,32 @@ public class LowPolyTerrain : MonoBehaviour {
         }
 
 
-        // Randomise path
+        //Add uniformly-spaced points
+        foreach (Vector2 sample in PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize, ysize), seed: seed))
+        {
+            polygon.Add(new Vertex((double)sample.x, (double)sample.y));
+        }
+        // Add some randomly sampled points
+        for (int i = 0; i < randomPoints; i++)
+        {
+            polygon.Add(new Vertex(rng.Range(0.0f, xsize), rng.Range(0.0f, ysize)));
+        }
+        // Add corner points
+        polygon.Add(new Vertex(0, 0, 1));
+        polygon.Add(new Vertex(0, ysize, 1));
+        polygon.Add(new Vertex(xsize, 0, 1));
+        polygon.Add(new Vertex(xsize, ysize, 1));
+        // Triangulate polygon
+        ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
+        mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
+        // Generate heights
+        GenerateHeightsForMesh();
+
+
+
+
+        // Generate path
+        roadMeshCreator.gameObject.SetActive(generateRoad);
         var pointsToAvoid = new List<Vector3>();
         if (generateRoad)
         {
@@ -187,7 +215,6 @@ public class LowPolyTerrain : MonoBehaviour {
             var middlePoint = new Vector2(xsize / 2 + rng.Range(-15, 15), ysize / 2 + rng.Range(-15, 15));
             var lastPoint = new Vector2(rng.Range(30, xsize - 30), 0.015f);
 
-            roadMeshCreator.gameObject.SetActive(true);
             // Edge point
             roadMeshCreator.pathCreator.bezierPath.MovePoint(0, new Vector3(firstPoint.x, GetPerlinElevation(firstPoint, roadHeightSmoothDistance), firstPoint.y), true);
             roadMeshCreator.pathCreator.bezierPath.MovePoint(6, new Vector3(lastPoint.x, GetPerlinElevation(lastPoint, roadHeightSmoothDistance), lastPoint.y), true);
@@ -225,11 +252,13 @@ public class LowPolyTerrain : MonoBehaviour {
                 else
                     roadAnimationPlaying = false;
             }
-        } 
-        else
-        {
-            roadMeshCreator.gameObject.SetActive(false);
+
+            // Generate heights
+            GenerateHeightsForMesh(pointsToAvoid, roadMeshCreator.roadWidth, roadSmoothDistance);
         }
+
+
+
 
         // Spawn house
         if (generateHouse)
@@ -243,80 +272,8 @@ public class LowPolyTerrain : MonoBehaviour {
         }
 
 
-        //Add uniformly-spaced points
-        foreach (Vector2 sample in PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize, ysize), seed: seed))
-        {
-            polygon.Add(new Vertex((double)sample.x, (double)sample.y));
-        }
-
-        // Add some randomly sampled points
-        for (int i = 0; i < randomPoints; i++) 
-        {
-            polygon.Add(new Vertex(rng.Range(0.0f, xsize), rng.Range(0.0f, ysize)));
-        }
-        // Add corner points
-        polygon.Add(new Vertex(0, 0, 1));
-        polygon.Add(new Vertex(0, ysize, 1));
-        polygon.Add(new Vertex(xsize, 0, 1));
-        polygon.Add(new Vertex(xsize, ysize, 1));
-
-        ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
-        mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
-
-        // Generating height at every point
-        for (int i = 0; i < mesh.vertices.Count; i++)
-        {
-            // Base height from perlin noise
-            float elevation = GetPerlinElevation(new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y));
-
-            // Fix height along path
-            var roadWidth = roadMeshCreator.roadWidth + minPointRadius + 6;
-            if (pointsToAvoid.Count > 0)
-            {
-                Vector3 closestPointOnRoad = Vector3.zero;
-                float distToRoad = float.MaxValue;
-                foreach (var point in pointsToAvoid)
-                {
-                    var Point2Da = new Vector2(point.x, point.z);
-                    var Point2Db = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
-                    var dist = Vector2.Distance(Point2Da, Point2Db);
-
-                    if (dist < distToRoad)
-                    {
-                        distToRoad = dist;
-                        closestPointOnRoad = point;
-                    }
-                }
-
-                if (distToRoad <= roadWidth)
-                {
-                    elevation = closestPointOnRoad.y - 1;
-                }
-                else if (distToRoad > roadWidth && distToRoad < roadSmoothDistance)
-                {
-                    elevation = map(distToRoad, roadWidth, roadSmoothDistance, closestPointOnRoad.y - 1, elevation);
-                }
-            }
-
-            elevations.Add(elevation);
-        }
-
-        // Collect all vertices on the edge of terrain for generatig base
-        for (int i = 0; i < mesh.vertices.Count; i++)
-        {
-            if (mesh.vertices[i].label == 1)
-            {
-                edgeVertices.Add(mesh.vertices[i]);
-            }
-        }
-
-
-        // Make terrain surface mesh
-        MakeMesh();
-
-
-        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        // Make river
+        // Generate river
+        riverSpawner.gameObject.SetActive(generateRiver);
         if (generateRiver)
         {
             RiverSpawner.xsize = xsize;
@@ -324,8 +281,18 @@ public class LowPolyTerrain : MonoBehaviour {
             RiverSpawner.mesh = mesh;
             RiverSpawner.edgeVertices = edgeVertices;
             RiverSpawner.elevations = elevations;
+            RiverSpawner.riverHeightOffset = riverHeightOffset;
+
             riverSpawner.Generate();
+            pointsToAvoid.Clear();
+            pointsToAvoid.AddRange(riverSpawner.pathCreator.path.GeneratePointsAlongPath(5));
+
+            // Generate heights
+            GenerateHeightsForMesh(pointsToAvoid, riverFlatDistance, riverSmoothDistance);
         }
+
+        // Make terrain surface mesh
+        MakeMesh();
 
 
         // Make base meshes
@@ -373,6 +340,71 @@ public class LowPolyTerrain : MonoBehaviour {
                 seed)
             );
             treesAnimation = false;
+        }
+    }
+
+
+
+
+    public void GenerateHeightsForMesh (List<Vector3> pointsToAvoid = null, float avoidWidth = 7, float avoidSmooth = 30)
+    {
+        bool elevationsExist = false;
+        if (elevations.Count == mesh.vertices.Count)
+            elevationsExist = true;
+
+        edgeVertices.Clear();
+
+        for (int i = 0; i < mesh.vertices.Count; i++)
+        {
+            // Base height from perlin noise
+            float elevation = 0;
+            if (!elevationsExist)
+                elevation = GetPerlinElevation(new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y));
+            else
+                elevation = elevations[i];
+
+            // Fix height along path
+            var roadWidth = (avoidWidth + minPointRadius + 6);
+            if (pointsToAvoid != null && pointsToAvoid.Count > 0)
+            {
+                Vector3 closestPointOnRoad = Vector3.zero;
+                float distToRoad = float.MaxValue;
+                foreach (var point in pointsToAvoid)
+                {
+                    var Point2Da = new Vector2(point.x, point.z);
+                    var Point2Db = new Vector2((float)mesh.vertices[i].x, (float)mesh.vertices[i].y);
+                    var dist = Vector2.Distance(Point2Da, Point2Db);
+
+                    if (dist < distToRoad)
+                    {
+                        distToRoad = dist;
+                        closestPointOnRoad = point;
+                    }
+                }
+
+                if (distToRoad <= roadWidth)
+                {
+                    elevation = closestPointOnRoad.y - 1;
+                }
+                else if (distToRoad > roadWidth && distToRoad < avoidSmooth)
+                {
+                    elevation = map(distToRoad, roadWidth, avoidSmooth, closestPointOnRoad.y - 1, elevation);
+                }
+            }
+
+            if (!elevationsExist)
+                elevations.Add(elevation);
+            else
+                elevations[i] = elevation;
+        }
+
+        // Collect all vertices on the edge of terrain for generatig base
+        for (int i = 0; i < mesh.vertices.Count; i++)
+        {
+            if (mesh.vertices[i].label == 1)
+            {
+                edgeVertices.Add(mesh.vertices[i]);
+            }
         }
     }
 
