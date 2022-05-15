@@ -80,12 +80,12 @@ public class LowPolyTerrain : MonoBehaviour {
     public int houseDistanceFromEdge = 35;
     private HouseSpawner house;
 
-    [Header("River")]
-    public bool generateRiver = true;
-    public float riverFlatDistance = 5;
-    public float riverSmoothDistance = 30;
-    public float riverHeightOffset = -10;
-    private RiverSpawner riverSpawner;
+    //[Header("River")]
+    //public bool generateRiver = true;
+    //public float riverFlatDistance = 5;
+    //public float riverSmoothDistance = 30;
+    //public float riverHeightOffset = -10;
+    //private RiverSpawner riverSpawner;
 
 
     [Header("Update")]
@@ -101,7 +101,7 @@ public class LowPolyTerrain : MonoBehaviour {
         treesSpawner = GetComponentInChildren<TreesSpawner>();
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
         house = GetComponentInChildren<HouseSpawner>();
-        riverSpawner = GetComponentInChildren<RiverSpawner>();
+        //riverSpawner = GetComponentInChildren<RiverSpawner>();
 
         regenerate = true;
     }
@@ -195,7 +195,7 @@ public class LowPolyTerrain : MonoBehaviour {
         ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
         mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
         // Generate heights
-        GenerateHeightsForMesh();
+        //GenerateHeightsForMesh();
 
 
 
@@ -255,7 +255,7 @@ public class LowPolyTerrain : MonoBehaviour {
             }
 
             // Generate heights
-            GenerateHeightsForMesh(pointsToAvoid, roadMeshCreator.roadWidth, roadSmoothDistance);
+            //GenerateHeightsForMesh(pointsToAvoid, roadMeshCreator.roadWidth, roadSmoothDistance);
         }
 
 
@@ -310,6 +310,8 @@ public class LowPolyTerrain : MonoBehaviour {
         //}
 
         // Make terrain surface mesh
+        GenerateHeightsForMesh(pointsToAvoid, roadMeshCreator.roadWidth, roadSmoothDistance);
+
         MakeMesh();
 
 
