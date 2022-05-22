@@ -59,12 +59,16 @@ public class LowPolyTerrain : MonoBehaviour {
     public float lampsDistanceFromRoad = 15;
     private LampsSpawner lampsSpawner;
 
-    [Header("Trees")]
+    [Header("Foliage")]
     public bool generateTrees = true;
     public bool treesAnimation = true;
     public float treeMinPointRadius = 18;
     public float treeDistanceFromEdges = 6;
-    private TreesSpawner treesSpawner;
+    public bool generateGrass = true;
+    public bool grassAnimation = true;
+    public float grassMinPointRadius = 7;
+    public float grassDistanceFromEdges = 8;
+    private FoliageSpawner foliageSpawner;
 
     [Header("Rocks")]
     public bool generateRocks = true;
@@ -80,13 +84,6 @@ public class LowPolyTerrain : MonoBehaviour {
     public int houseDistanceFromEdge = 35;
     private HouseSpawner house;
 
-    //[Header("River")]
-    //public bool generateRiver = true;
-    //public float riverFlatDistance = 5;
-    //public float riverSmoothDistance = 30;
-    //public float riverHeightOffset = -10;
-    //private RiverSpawner riverSpawner;
-
 
     [Header("Update")]
     public bool regenerate = false;
@@ -98,10 +95,9 @@ public class LowPolyTerrain : MonoBehaviour {
     {
         terrainBase = GetComponentInChildren<TerrainBase>();
         lampsSpawner = GetComponentInChildren<LampsSpawner>();
-        treesSpawner = GetComponentInChildren<TreesSpawner>();
+        foliageSpawner = GetComponentInChildren<FoliageSpawner>();
         rocksSpawner = GetComponentInChildren<RocksSpawner>();
         house = GetComponentInChildren<HouseSpawner>();
-        //riverSpawner = GetComponentInChildren<RiverSpawner>();
 
         regenerate = true;
     }
@@ -194,10 +190,6 @@ public class LowPolyTerrain : MonoBehaviour {
         // Triangulate polygon
         ConstraintOptions options = new ConstraintOptions() { ConformingDelaunay = true };
         mesh = (TriangleNet.Mesh)polygon.Triangulate(options);
-        // Generate heights
-        //GenerateHeightsForMesh();
-
-
 
 
         // Generate path
@@ -253,9 +245,6 @@ public class LowPolyTerrain : MonoBehaviour {
                 else
                     roadAnimationPlaying = false;
             }
-
-            // Generate heights
-            //GenerateHeightsForMesh(pointsToAvoid, roadMeshCreator.roadWidth, roadSmoothDistance);
         }
 
 
@@ -289,25 +278,6 @@ public class LowPolyTerrain : MonoBehaviour {
             }
         }
 
-
-        // Generate river
-        //riverSpawner.gameObject.SetActive(generateRiver);
-        //if (generateRiver)
-        //{
-        //    RiverSpawner.xsize = xsize;
-        //    RiverSpawner.ysize = ysize;
-        //    RiverSpawner.mesh = mesh;
-        //    RiverSpawner.edgeVertices = edgeVertices;
-        //    RiverSpawner.elevations = elevations;
-        //    RiverSpawner.riverHeightOffset = riverHeightOffset;
-
-        //    riverSpawner.Generate();
-        //    pointsToAvoid.Clear();
-        //    pointsToAvoid.AddRange(riverSpawner.pathCreator.path.GeneratePointsAlongPath(5));
-
-        //    // Generate heights
-        //    GenerateHeightsForMesh(pointsToAvoid, riverFlatDistance, riverSmoothDistance);
-        //}
 
         // Make terrain surface mesh
         GenerateHeightsForMesh(pointsToAvoid, roadMeshCreator.roadWidth, roadSmoothDistance);
@@ -345,10 +315,10 @@ public class LowPolyTerrain : MonoBehaviour {
             rocksAnimation = false;
         }
 
-        // Spawn trees
+        // Spawn foliage
         if (generateTrees)
         {
-            StartCoroutine(treesSpawner.Generate(
+            StartCoroutine(foliageSpawner.GenerateTrees(
                 xsize,
                 ysize,
                 treeMinPointRadius,
@@ -360,6 +330,21 @@ public class LowPolyTerrain : MonoBehaviour {
                 seed)
             );
             treesAnimation = false;
+        }
+        if (generateGrass)
+        {
+            StartCoroutine(foliageSpawner.GenerateGrass(
+                xsize,
+                ysize,
+                grassMinPointRadius,
+                grassDistanceFromEdges,
+                pointsToAvoid,
+                roadMeshCreator.roadWidth + minPointRadius - 2,
+                toDeleteList,
+                grassAnimation,
+                seed)
+            );
+            grassAnimation = false;
         }
     }
 

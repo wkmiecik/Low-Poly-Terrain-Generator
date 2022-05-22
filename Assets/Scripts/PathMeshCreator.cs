@@ -107,15 +107,15 @@ public class PathMeshCreator : MonoBehaviour
             Vector3 vertSideA = points[i] - localRight * Mathf.Abs(roadWidth);
             Vector3 vertSideB = points[i] + localRight * Mathf.Abs(roadWidth);
 
-            if (vertSideA[0] <= 0) vertSideA[0] = 0.015f;
-            if (vertSideA[0] >= 400) vertSideA[0] = 400 - 0.015f;
-            if (vertSideA[2] <= 0) vertSideA[2] = 0.015f;
-            if (vertSideA[2] >= 400) vertSideA[2] = 400 - 0.015f;
+            //if (vertSideA[0] <= 0) vertSideA[0] = 0.015f;
+            //if (vertSideA[0] >= 400) vertSideA[0] = 400 - 0.015f;
+            //if (vertSideA[2] <= 0) vertSideA[2] = 0.015f;
+            //if (vertSideA[2] >= 400) vertSideA[2] = 400 - 0.015f;
 
-            if (vertSideB[0] <= 0) vertSideB[0] = 0.015f;
-            if (vertSideB[0] >= 400) vertSideB[0] = 400 - 0.015f;
-            if (vertSideB[2] <= 0) vertSideB[2] = 0.015f;
-            if (vertSideB[2] >= 400) vertSideB[2] = 400 - 0.015f;
+            //if (vertSideB[0] <= 0) vertSideB[0] = 0.015f;
+            //if (vertSideB[0] >= 400) vertSideB[0] = 400 - 0.015f;
+            //if (vertSideB[2] <= 0) vertSideB[2] = 0.015f;
+            //if (vertSideB[2] >= 400) vertSideB[2] = 400 - 0.015f;
 
             // Add top of road vertices
             verts[vertIndex + 0] = vertSideA;

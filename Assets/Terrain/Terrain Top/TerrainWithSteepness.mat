@@ -14,7 +14,7 @@ Material:
   m_InvalidKeywords:
   - _NORMALMAP_TANGENT_SPACE
   m_LightmapFlags: 1
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 2225
   stringTagMap:
@@ -23,7 +23,6 @@ Material:
   - TransparentDepthPrepass
   - TransparentDepthPostpass
   - TransparentBackface
-  - MOTIONVECTORS
   - RayTracingPrepass
   m_SavedProperties:
     serializedVersion: 3
@@ -177,8 +176,8 @@ Material:
     - _AlphaSrcBlend: 1
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 0
-    - _AngleThreshold: 42.8
-    - _AngleThreshold2: 64.3
+    - _AngleThreshold: 40
+    - _AngleThreshold2: 50
     - _Anisotropy: 0
     - _Blend: 0
     - _BlendMode: 0

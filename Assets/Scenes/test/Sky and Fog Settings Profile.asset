@@ -51,7 +51,7 @@ MonoBehaviour:
     m_Value: 1
   seaLevel:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: -700
   planetaryRadius:
     m_OverrideState: 0
     m_Value: 6378100
@@ -157,7 +157,7 @@ MonoBehaviour:
       m_Bits: 4294967295
   maximumSamples:
     m_OverrideState: 1
-    m_Value: 257
+    m_Value: 128
   minimumDepth:
     m_OverrideState: 0
     m_Value: 1
@@ -302,7 +302,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   length:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.15
   opacity:
     m_OverrideState: 0
@@ -587,8 +587,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   lastBounceFallbackHierarchy:
-    m_OverrideState: 0
-    m_Value: 3
+    m_OverrideState: 1
+    m_Value: 1
   layerMask:
     m_OverrideState: 1
     m_Value:
@@ -599,7 +599,7 @@ MonoBehaviour:
     m_Value: 7
   m_RayLength:
     m_OverrideState: 1
-    m_Value: 50
+    m_Value: 200
   m_ClampValue:
     m_OverrideState: 1
     m_Value: 5
@@ -632,7 +632,7 @@ MonoBehaviour:
     m_Value: 64
   receiverMotionRejection:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -888,7 +888,7 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.5
   directLightingStrength:
     m_OverrideState: 1
     m_Value: 0
