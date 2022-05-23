@@ -11,10 +11,10 @@ public class FoliageSpawner : MonoBehaviour
 
     [Header("Grass")]
     public List<GameObject> grassPrefabs;
-    public Gradient grassGradient;
+    public List<Mesh> grassMeshes;
+    public Material grassMaterial;
 
-
-    RandomNumbers rng;
+    private List<CombineInstance> combineMeshes = new List<CombineInstance>();
 
     public IEnumerator GenerateTrees(
         float xsize,
@@ -27,7 +27,7 @@ public class FoliageSpawner : MonoBehaviour
         bool animate = false,
         int seed = 100)
     {
-        rng = new RandomNumbers(seed);
+        RandomNumbers rng = new RandomNumbers(seed);
 
         RaycastHit hit;
 
@@ -39,7 +39,12 @@ public class FoliageSpawner : MonoBehaviour
             if (i % Mathf.CeilToInt(200 * Time.deltaTime) == 0 && animate) 
                 yield return null;
 
+            // Doing it every loop so seed is not depending on amount of spawned objects
+            var rot = Quaternion.Euler(rng.Range(-5, 5), rng.Range(0, 360), rng.Range(-5, 5));
+            var scale = new Vector3(rng.Range(1.1f, 1.4f), rng.Range(1.1f, 1.4f), rng.Range(1.1f, 1.4f));
+            var color = treeGradient.Evaluate(rng.Range(0f, 1f));
             var prefab = treePrefabs[rng.Range(0, treePrefabs.Count)];
+
             var rayStartPos = new Vector3(samples[i].x + distanceFromEdges/2, 100, samples[i].y + distanceFromEdges/2);
 
             if (Physics.Raycast(rayStartPos, -Vector3.up, out hit))
@@ -63,8 +68,7 @@ public class FoliageSpawner : MonoBehaviour
 
                 if (spawn)
                 {
-                    var rot = Quaternion.Euler(rng.Range(-5, 5), rng.Range(0, 360), rng.Range(-5, 5));
-                    toDelete.Add(Spawn(prefab, hit.point + Vector3.up, rot, 1.1f, 1.4f, treeGradient, animate));
+                    toDelete.Add(Spawn(prefab, hit.point + Vector3.up, rot, scale, color, animate));
                 }
             }
         }
@@ -82,7 +86,7 @@ public class FoliageSpawner : MonoBehaviour
     bool animate = false,
     int seed = 100)
     {
-        rng = new RandomNumbers(seed);
+        RandomNumbers rng = new RandomNumbers(seed);
 
         RaycastHit hit;
 
@@ -94,7 +98,12 @@ public class FoliageSpawner : MonoBehaviour
             if (i % Mathf.CeilToInt(600 * Time.deltaTime) == 0 && animate)
                 yield return null;
 
-            var prefab = grassPrefabs[rng.Range(0, treePrefabs.Count)];
+            // Doing it every loop so seed is not depending on amount of spawned objects
+            var scale = new Vector3(rng.Range(70, 80), rng.Range(70, 80), rng.Range(70, 80));
+            int rndModel = rng.Range(0, grassMeshes.Count);
+            var prefab = grassPrefabs[rndModel];
+            var mesh = grassMeshes[rndModel];
+
             var rayStartPos = new Vector3(samplesGrass[i].x + distanceFromEdges / 2, 100, samplesGrass[i].y + distanceFromEdges / 2);
 
             if (Physics.Raycast(rayStartPos, -Vector3.up, out hit))
@@ -115,31 +124,37 @@ public class FoliageSpawner : MonoBehaviour
                 {
                     spawn = false;
                 }
+                var rot = Quaternion.FromToRotation(Vector3.up, hit.normal);
 
                 if (spawn)
                 {
-                    var rot = Quaternion.FromToRotation(Vector3.up, hit.normal);
-                    toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, 70, 80, grassGradient, animate));
+                    if (animate)
+                        toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
+                    else
+                        AddCombineMesh(mesh, hit.point + Vector3.up * -1f, rot, scale);
                 }
             }
+        }
+        if (!animate)
+        {
+            toDelete.Add(SpawnCombined());
+            combineMeshes.Clear();
         }
     }
 
 
-    private GameObject Spawn(GameObject prefab, Vector3 pos, Quaternion rot, float scaleMin, float scaleMax, Gradient gradient, bool animate)
+    private GameObject Spawn(GameObject prefab, Vector3 pos, Quaternion rot, Vector3 scale, Color? color, bool animate)
     {
-        var seedSave = rng.seed;
-
-        
-        var scale = new Vector3(rng.Range(scaleMin, scaleMax), rng.Range(scaleMin, scaleMax), rng.Range(scaleMin, scaleMax));
-
         var obj = Instantiate(prefab, pos, rot);
         obj.transform.parent = transform;
 
-        var meshRenderer = obj.GetComponent<MeshRenderer>();
-        var mat = meshRenderer.materials[0];
-        mat.color = gradient.Evaluate(rng.Range(0f, 1f));
-        meshRenderer.materials[0] = mat;
+        if (color != null)
+        {
+            var meshRenderer = obj.GetComponent<MeshRenderer>();
+            var mat = meshRenderer.materials[0];
+            mat.color = (Color)color;
+            meshRenderer.materials[0] = mat;
+        }
 
         if (animate)
         {
@@ -151,7 +166,31 @@ public class FoliageSpawner : MonoBehaviour
             obj.transform.localScale = scale;
         }
 
-        rng.seed = seedSave;
+        return obj;
+    }
+
+
+    private void AddCombineMesh(Mesh mesh, Vector3 pos, Quaternion rot, Vector3 scale)
+    {
+        CombineInstance instance = new CombineInstance();
+        instance.mesh = mesh;
+        instance.transform = Matrix4x4.TRS(pos, rot, scale);
+
+        combineMeshes.Add(instance);
+    }
+
+    private GameObject SpawnCombined()
+    {
+        var obj = new GameObject("Grass");
+        obj.transform.parent = transform;
+
+        var meshFilter = obj.AddComponent<MeshFilter>();
+        meshFilter.mesh = new Mesh();
+        meshFilter.mesh.CombineMeshes(combineMeshes.ToArray());
+
+        var meshRenderer = obj.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = grassMaterial;
+
         return obj;
     }
 }

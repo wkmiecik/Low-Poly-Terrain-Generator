@@ -339,7 +339,7 @@ public class LowPolyTerrain : MonoBehaviour {
                 grassMinPointRadius,
                 grassDistanceFromEdges,
                 pointsToAvoid,
-                roadMeshCreator.roadWidth + minPointRadius - 2,
+                roadMeshCreator.roadWidth + minPointRadius - 3,
                 toDeleteList,
                 grassAnimation,
                 seed)
