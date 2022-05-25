@@ -5,6 +5,7 @@ Shader "Nicrom/LPW/ASE/Low Poly Vegetation"
 	Properties
 	{
 		[HideInInspector] _EmissionColor("Emission Color", Color) = (1,1,1,1)
+		[Header(Surface)]_Color("Color", Color) = (1,1,1,1)
 		[HideInInspector] _AlphaCutoff("Alpha Cutoff ", Range(0, 1)) = 0.5
 		[ASEBegin][NoScaleOffset][Header(Surface)][Space]_MainTex("Main Texture", 2D) = "white" {}
 		_Metallic("Metallic", Range( 0 , 1)) = 0

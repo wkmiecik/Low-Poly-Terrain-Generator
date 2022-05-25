@@ -59,15 +59,21 @@ public class LowPolyTerrain : MonoBehaviour {
     public float lampsDistanceFromRoad = 15;
     private LampsSpawner lampsSpawner;
 
-    [Header("Foliage")]
+    [Header("Trees")]
     public bool generateTrees = true;
     public bool treesAnimation = true;
     public float treeMinPointRadius = 18;
     public float treeDistanceFromEdges = 6;
+    [Header("Grass")]
     public bool generateGrass = true;
     public bool grassAnimation = true;
     public float grassMinPointRadius = 7;
     public float grassDistanceFromEdges = 8;
+    [Header("Flowers")]
+    public bool generateFlowers = true;
+    public bool flowersAnimation = true;
+    public float flowersMinPointRadius = 7;
+    public float flowersDistanceFromEdges = 8;
     private FoliageSpawner foliageSpawner;
 
     [Header("Rocks")]
@@ -345,6 +351,21 @@ public class LowPolyTerrain : MonoBehaviour {
                 seed)
             );
             grassAnimation = false;
+        }
+        if (generateFlowers)
+        {
+            StartCoroutine(foliageSpawner.GenerateFlowers(
+                xsize,
+                ysize,
+                flowersMinPointRadius,
+                flowersDistanceFromEdges,
+                pointsToAvoid,
+                roadMeshCreator.roadWidth + minPointRadius - 3,
+                toDeleteList,
+                flowersAnimation,
+                seed)
+            );
+            flowersAnimation = false;
         }
     }
 

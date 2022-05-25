@@ -5,6 +5,27 @@ using DG.Tweening;
 
 public class FoliageSpawner : MonoBehaviour
 {
+    struct MeshTypeList
+    {
+        public Mesh mesh;
+        public Material material;
+
+        public List<Matrix4x4> transforms;
+
+        public MeshTypeList(Mesh mesh, Material material)
+        {
+            this.mesh = mesh;
+            this.material = material;
+
+            transforms = new List<Matrix4x4>();
+        }
+
+        public void ClearTransforms()
+        {
+            transforms.Clear();
+        }
+    }
+
     [Header("Trees")]
     public List<GameObject> treePrefabs;
     public Gradient treeGradient;
@@ -13,19 +34,33 @@ public class FoliageSpawner : MonoBehaviour
     public List<GameObject> grassPrefabs;
     public List<Mesh> grassMeshes;
     public Material grassMaterial;
+    public Gradient grassGradient;
 
-    private List<CombineInstance> combineMeshes = new List<CombineInstance>();
+    [Header("Flowers")]
+    public List<GameObject> flowerPrefabs;
+    public List<Mesh> flowerMeshes;
+    public Material flowerMaterial;
+
+
+    List<MeshTypeList> grassCombinedRender = new List<MeshTypeList>();
+    List<MeshTypeList> flowersCombinedRender = new List<MeshTypeList>();
+
+    private void Update()
+    {
+        SpawnCombined();
+    }
+
 
     public IEnumerator GenerateTrees(
-        float xsize,
-        float ysize,
-        float minPointRadius,
-        float distanceFromEdges,
-        List<Vector3> pointsToAvoid,
-        float pointsAvoidDistance,
-        List<GameObject> toDelete,
-        bool animate = false,
-        int seed = 100)
+    float xsize,
+    float ysize,
+    float minPointRadius,
+    float distanceFromEdges,
+    List<Vector3> pointsToAvoid,
+    float pointsAvoidDistance,
+    List<GameObject> toDelete,
+    bool animate = false,
+    int seed = 100)
     {
         RandomNumbers rng = new RandomNumbers(seed);
 
@@ -88,23 +123,97 @@ public class FoliageSpawner : MonoBehaviour
     {
         RandomNumbers rng = new RandomNumbers(seed);
 
+        foreach (var item in grassCombinedRender) 
+            item.ClearTransforms();
+
+        foreach (var mesh in grassMeshes)
+        {
+            Material mat = new Material(grassMaterial);
+            mat.color = grassGradient.Evaluate(rng.Range(0f, 1f));
+            grassCombinedRender.Add(new MeshTypeList(mesh, mat));
+        }
+
         RaycastHit hit;
 
-        var samplesGrass = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges), seed: seed);
+        var samples = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges), seed: seed);
 
         //Add grass
-        for (int i = 0; i < samplesGrass.Count; i++)
+        for (int i = 0; i < samples.Count; i++)
         {
             if (i % Mathf.CeilToInt(600 * Time.deltaTime) == 0 && animate)
                 yield return null;
 
-            // Doing it every loop so seed is not depending on amount of spawned objects
+            // Setting random parameters every loop so seed is not depending on amount of spawned objects
             var scale = new Vector3(rng.Range(70, 80), rng.Range(70, 80), rng.Range(70, 80));
             int rndModel = rng.Range(0, grassMeshes.Count);
             var prefab = grassPrefabs[rndModel];
-            var mesh = grassMeshes[rndModel];
 
-            var rayStartPos = new Vector3(samplesGrass[i].x + distanceFromEdges / 2, 100, samplesGrass[i].y + distanceFromEdges / 2);
+            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 100, samples[i].y + distanceFromEdges / 2);
+
+            if (Physics.Raycast(rayStartPos, -Vector3.up, out hit))
+            {
+                bool spawn = true;
+
+                // Check if not on avoid point
+                foreach (var point in pointsToAvoid)
+                {
+                    if ((hit.point - point).sqrMagnitude <= pointsAvoidDistance * pointsAvoidDistance)
+                    {
+                        spawn = false;
+                    }
+                }
+
+                // Check if slope is not too big
+                if (hit.normal.y < .72f)
+                    spawn = false;
+
+
+                var rot = Quaternion.FromToRotation(Vector3.up, hit.normal);
+
+                if (spawn && animate)
+                    toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
+                else if (spawn)
+                    grassCombinedRender[rndModel].transforms.Add(Matrix4x4.TRS(hit.point + Vector3.up * -1f, rot, scale));
+            }
+        }
+    }
+
+
+    public IEnumerator GenerateFlowers(
+    float xsize,
+    float ysize,
+    float minPointRadius,
+    float distanceFromEdges,
+    List<Vector3> pointsToAvoid,
+    float pointsAvoidDistance,
+    List<GameObject> toDelete,
+    bool animate = false,
+    int seed = 100)
+    {
+        RandomNumbers rng = new RandomNumbers(seed);
+
+        foreach (var item in flowersCombinedRender) 
+            item.ClearTransforms();
+
+        foreach (var mesh in flowerMeshes)
+            flowersCombinedRender.Add(new MeshTypeList(mesh, flowerMaterial));
+
+        RaycastHit hit;
+
+        var samples = PoissonDiscSampler.GeneratePoints(minPointRadius, new Vector2(xsize - distanceFromEdges, ysize - distanceFromEdges), seed: seed);
+
+        //Add grass
+        for (int i = 0; i < samples.Count; i++)
+        {
+            if (i % Mathf.CeilToInt(600 * Time.deltaTime) == 0 && animate)
+                yield return null;
+
+            // Setting random parameters every loop so seed is not depending on amount of spawned objects
+            var scale = new Vector3(rng.Range(1, 1.1f), rng.Range(1, 1.1f), rng.Range(1, 1.1f));
+            int rndModel = rng.Range(0, flowerMeshes.Count);
+            var prefab = flowerPrefabs[rndModel];
+
+            var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 100, samples[i].y + distanceFromEdges / 2);
 
             if (Physics.Raycast(rayStartPos, -Vector3.up, out hit))
             {
@@ -121,26 +230,19 @@ public class FoliageSpawner : MonoBehaviour
 
                 // Check if slope is not too big
                 if (hit.normal.y < .7f)
-                {
                     spawn = false;
-                }
+
+
                 var rot = Quaternion.FromToRotation(Vector3.up, hit.normal);
 
-                if (spawn)
-                {
-                    if (animate)
-                        toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
-                    else
-                        AddCombineMesh(mesh, hit.point + Vector3.up * -1f, rot, scale);
-                }
+                if (spawn && animate)
+                    toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
+                else if (spawn)
+                    flowersCombinedRender[rndModel].transforms.Add(Matrix4x4.TRS(hit.point + Vector3.up * -0.05f, rot, scale));
             }
         }
-        if (!animate)
-        {
-            toDelete.Add(SpawnCombined());
-            combineMeshes.Clear();
-        }
     }
+
 
 
     private GameObject Spawn(GameObject prefab, Vector3 pos, Quaternion rot, Vector3 scale, Color? color, bool animate)
@@ -170,27 +272,33 @@ public class FoliageSpawner : MonoBehaviour
     }
 
 
-    private void AddCombineMesh(Mesh mesh, Vector3 pos, Quaternion rot, Vector3 scale)
+
+    private void SpawnCombined()
     {
-        CombineInstance instance = new CombineInstance();
-        instance.mesh = mesh;
-        instance.transform = Matrix4x4.TRS(pos, rot, scale);
+        Matrix4x4[] matrices;
 
-        combineMeshes.Add(instance);
-    }
+        foreach (var meshTypeList in grassCombinedRender)
+        {
+            for (int chunkStart = 0; chunkStart < meshTypeList.transforms.Count; chunkStart += 1024)
+            {
+                int count = meshTypeList.transforms.Count - chunkStart;
+                count = count > 1023 ? 1023 : count;
 
-    private GameObject SpawnCombined()
-    {
-        var obj = new GameObject("Grass");
-        obj.transform.parent = transform;
+                matrices = meshTypeList.transforms.GetRange(chunkStart, count).ToArray();
+                Graphics.DrawMeshInstanced(meshTypeList.mesh, 0, meshTypeList.material, matrices, count);
+            }
+        }
 
-        var meshFilter = obj.AddComponent<MeshFilter>();
-        meshFilter.mesh = new Mesh();
-        meshFilter.mesh.CombineMeshes(combineMeshes.ToArray());
+        foreach (var meshTypeList in flowersCombinedRender)
+        {
+            for (int chunkStart = 0; chunkStart < meshTypeList.transforms.Count; chunkStart += 1024)
+            {
+                int count = meshTypeList.transforms.Count - chunkStart;
+                count = count > 1023 ? 1023 : count;
 
-        var meshRenderer = obj.AddComponent<MeshRenderer>();
-        meshRenderer.sharedMaterial = grassMaterial;
-
-        return obj;
+                matrices = meshTypeList.transforms.GetRange(chunkStart, count).ToArray();
+                Graphics.DrawMeshInstanced(meshTypeList.mesh, 0, meshTypeList.material, matrices, count);
+            }
+        }
     }
 }
