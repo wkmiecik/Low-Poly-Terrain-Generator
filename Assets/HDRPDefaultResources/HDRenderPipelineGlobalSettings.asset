@@ -27,7 +27,7 @@ MonoBehaviour:
     sssQualityMode: 0
     sssQualityLevel: 2
     sssCustomSampleBudget: 20
-    msaaMode: 1
+    msaaMode: 8
     materialQuality: 0
   m_RenderingPathDefaultBakedOrCustomReflectionFrameSettings:
     bitDatas:

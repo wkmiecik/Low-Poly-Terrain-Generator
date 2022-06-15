@@ -40,14 +40,21 @@ public class FoliageSpawner : MonoBehaviour
     public List<GameObject> flowerPrefabs;
     public List<Mesh> flowerMeshes;
     public Material flowerMaterial;
+    
 
+    [HideInInspector] public bool drawGrass = true;
+    [HideInInspector] public bool drawFlowers = true;
 
     List<MeshTypeList> grassCombinedRender = new List<MeshTypeList>();
     List<MeshTypeList> flowersCombinedRender = new List<MeshTypeList>();
 
     private void Update()
     {
-        SpawnCombined();
+        if (drawGrass)
+            DrawMeshesInChunks(grassCombinedRender);
+
+        if (drawFlowers)
+            DrawMeshesInChunks(flowersCombinedRender);
     }
 
 
@@ -209,7 +216,8 @@ public class FoliageSpawner : MonoBehaviour
                 yield return null;
 
             // Setting random parameters every loop so seed is not depending on amount of spawned objects
-            var scale = new Vector3(rng.Range(1, 1.1f), rng.Range(1, 1.1f), rng.Range(1, 1.1f));
+            var scaleF = rng.Range(1.5f, 2);
+            var scale = new Vector3(scaleF, scaleF, scaleF);
             int rndModel = rng.Range(0, flowerMeshes.Count);
             var prefab = flowerPrefabs[rndModel];
 
@@ -273,31 +281,20 @@ public class FoliageSpawner : MonoBehaviour
 
 
 
-    private void SpawnCombined()
+    private void DrawMeshesInChunks(List<MeshTypeList> meshTypeList)
     {
         Matrix4x4[] matrices;
 
-        foreach (var meshTypeList in grassCombinedRender)
+        foreach (var meshTypes in meshTypeList)
         {
-            for (int chunkStart = 0; chunkStart < meshTypeList.transforms.Count; chunkStart += 1024)
+            for (int chunkStart = 0; chunkStart < meshTypes.transforms.Count; chunkStart += 1024)
             {
-                int count = meshTypeList.transforms.Count - chunkStart;
+                int count = meshTypes.transforms.Count - chunkStart;
                 count = count > 1023 ? 1023 : count;
 
-                matrices = meshTypeList.transforms.GetRange(chunkStart, count).ToArray();
-                Graphics.DrawMeshInstanced(meshTypeList.mesh, 0, meshTypeList.material, matrices, count);
-            }
-        }
-
-        foreach (var meshTypeList in flowersCombinedRender)
-        {
-            for (int chunkStart = 0; chunkStart < meshTypeList.transforms.Count; chunkStart += 1024)
-            {
-                int count = meshTypeList.transforms.Count - chunkStart;
-                count = count > 1023 ? 1023 : count;
-
-                matrices = meshTypeList.transforms.GetRange(chunkStart, count).ToArray();
-                Graphics.DrawMeshInstanced(meshTypeList.mesh, 0, meshTypeList.material, matrices, count);
+                matrices = meshTypes.transforms.GetRange(chunkStart, count).ToArray();
+                
+                Graphics.DrawMeshInstanced(meshTypes.mesh, 0, meshTypes.material, matrices, count);
             }
         }
     }

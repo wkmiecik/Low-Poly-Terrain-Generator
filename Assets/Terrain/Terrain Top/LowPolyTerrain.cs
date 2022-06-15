@@ -337,6 +337,8 @@ public class LowPolyTerrain : MonoBehaviour {
             );
             treesAnimation = false;
         }
+
+        foliageSpawner.drawGrass = generateGrass;
         if (generateGrass)
         {
             StartCoroutine(foliageSpawner.GenerateGrass(
@@ -352,6 +354,8 @@ public class LowPolyTerrain : MonoBehaviour {
             );
             grassAnimation = false;
         }
+
+        foliageSpawner.drawFlowers = generateFlowers;
         if (generateFlowers)
         {
             StartCoroutine(foliageSpawner.GenerateFlowers(
