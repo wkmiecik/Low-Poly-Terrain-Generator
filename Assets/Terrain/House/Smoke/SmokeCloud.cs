@@ -10,7 +10,7 @@ public class SmokeCloud : MonoBehaviour
 
     private RandomNumbers rng;
 
-    private float lifeTimer = 20;
+    private float lifeTimer = 40;
 
     void Start()
     {
