@@ -13,8 +13,8 @@ public class TerrainBase : MonoBehaviour
     public Transform topLayerParent = null;
     public Transform bottomLayerParent = null;
     [HideInInspector] public List<float> elevations;
-    [HideInInspector] public int xsize = 300;
-    [HideInInspector] public int ysize = 300;
+    [HideInInspector] public float xsize = 300;
+    [HideInInspector] public float ysize = 300;
     [HideInInspector] public float topLayerSize = 10;
     [HideInInspector] public float bottomLayerSize = 60;
 

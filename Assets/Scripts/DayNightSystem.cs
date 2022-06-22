@@ -10,6 +10,7 @@ public class DayNightSystem : MonoBehaviour
     [Header("Cycle")]
     public bool cycleEnabled = true;
     public float cycleLength = 200;
+    public float startTime = 50;
 
     [Header("Values")]
     [Range(0,360)] public float currentTime = 37;
@@ -37,19 +38,29 @@ public class DayNightSystem : MonoBehaviour
         sunLightData = sunLight.GetComponent<HDAdditionalLightData>();
         moonLightData = moonLight.GetComponent<HDAdditionalLightData>();
 
-        if (cycleEnabled)
-            StartCoroutine(StartTween());
+        StartCoroutine(StartTween());
+    }
+
+    public void UnpauseCycle()
+    {
+        cycleEnabled = true;
     }
 
     private IEnumerator StartTween()
     {
         yield return new WaitForSeconds(.1f);
 
+        currentTime = 0;
+
         cycleTween = DOTween
             .To(() => currentTime, x => currentTime = x, 360, cycleLength)
             .SetEase(timeCurve)
             .Play()
-            .SetLoops(-1);
+            .SetLoops(-1)
+            .SetId(-1);
+
+        cycleTween.Goto(startTime);
+        cycleTween.Pause();
     }
 
     private void Update()

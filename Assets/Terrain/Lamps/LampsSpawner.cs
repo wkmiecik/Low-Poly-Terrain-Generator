@@ -62,7 +62,7 @@ public class LampsSpawner : MonoBehaviour
         if (animate)
         {
             obj.transform.localScale = Vector3.zero;
-            obj.transform.DOScale(scale, .3f);
+            obj.transform.DOScale(scale, .8f);
         }
         else
         {

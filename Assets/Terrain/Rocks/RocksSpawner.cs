@@ -32,8 +32,8 @@ public class RocksSpawner : MonoBehaviour
         // Add uniformly-spaced rocks
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(200 * Time.deltaTime) == 0 && animate) 
-                yield return null;
+            if (i % Mathf.CeilToInt(2 * Time.deltaTime) == 0 && animate) 
+                yield return new WaitForSeconds(.1f);
 
             var prefab = rockPrefabs[rng.Range(0, rockPrefabs.Count)];
             var rayStartPos = new Vector3(samples[i].x + distanceFromEdges / 2, 100, samples[i].y + distanceFromEdges / 2);
@@ -100,7 +100,7 @@ public class RocksSpawner : MonoBehaviour
         if (animate)
         {
             obj.transform.localScale = Vector3.zero;
-            obj.transform.DOScale(scale, .5f);
+            obj.transform.DOScale(scale, 1.5f);
         } else
         {
             obj.transform.localScale = scale;

@@ -504,7 +504,7 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.3
+    m_Value: 0.25
   smoothness:
     m_OverrideState: 0
     m_Value: 0.2
@@ -637,7 +637,7 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 0.12
   response:
     m_OverrideState: 0
     m_Value: 0.8
@@ -695,17 +695,17 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0
   nearFocusStart:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   nearFocusEnd:
-    m_OverrideState: 0
-    m_Value: 0.00001
+    m_OverrideState: 1
+    m_Value: 300
   farFocusStart:
     m_OverrideState: 1
     m_Value: 300
   farFocusEnd:
     m_OverrideState: 1
-    m_Value: 1900
+    m_Value: 1500
   m_NearSampleCount:
     m_OverrideState: 1
     m_Value: 8

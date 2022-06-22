@@ -7,13 +7,16 @@ using TriangleNet.Meshing;
 using DG.Tweening;
 
 public class LowPolyTerrain : MonoBehaviour {
+    [Header("Animation")]
+    public bool animationPlaying;
+
     [Header("Terrain")]
     public int seed = 0;
     float[] seeds;
 
-    public int size = 300;
-    private int xsize = 300;
-    private int ysize = 300;
+    public float size = 300;
+    private float xsize = 300;
+    private float ysize = 300;
 
     public float minPointRadius = 12f;
 
@@ -108,15 +111,74 @@ public class LowPolyTerrain : MonoBehaviour {
         regenerate = true;
     }
 
+    public void EnableAnimation()
+    {
+        animationPlaying = true;
+    }
+    public void DisableAnimation()
+    {
+        animationPlaying = false;
+    }
+    public void EnableRocks()
+    {
+        generateRocks = true;
+        OnValidate();
+    }
+    public void EnableGrass()
+    {
+        generateGrass = true;
+        OnValidate();
+    }
+    public void EnableFlowers()
+    {
+        generateFlowers = true;
+        OnValidate();
+    }
+    public void EnableTrees()
+    {
+        generateTrees = true;
+        OnValidate();
+    }
+    public void EnableRoad()
+    {
+        generateRoad = true;
+        OnValidate();
+    }
+    public void EnableLamps()
+    {
+        generateLamps = true;
+        OnValidate();
+    }
+    public void EnableHouse()
+    {
+        generateHouse = true;
+        OnValidate();
+    }
+    public void SetSeed(int seed)
+    {
+        this.seed = seed;
+        OnValidate();
+    }
+
+    public void StopPlayMode()
+    {
+        UnityEditor.EditorApplication.isPlaying = false;
+    }
+
     void FixedUpdate() 
     {
+        if (animationPlaying)
+        {
+            OnValidate();
+        }
+        
         if (regenerate) 
         {
             regenerate = false;
 
             // Clear playing animations
             StopAllCoroutines();
-            DOTween.Clear();
+            DOTween.KillAll(false, -1);
 
             // Delete everything on delete list
             foreach (var gameObject in toDeleteList) 
@@ -161,7 +223,8 @@ public class LowPolyTerrain : MonoBehaviour {
         }
     }
 
-    public IEnumerator Generate() 
+
+    public IEnumerator Generate()
     {
         yield return new WaitForFixedUpdate();
 
@@ -240,11 +303,11 @@ public class LowPolyTerrain : MonoBehaviour {
 
             // Generate points spaced along path
             pointsToAvoid = roadMeshCreator.pathCreator.path.GeneratePointsAlongPath(6);
-            pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.25f)));
+            pointsToAvoid = pointsToAvoid.GetRange(0, Mathf.CeilToInt(pointsToAvoid.Count * Mathf.Clamp01(roadFill + 0.15f)));
 
             if (roadAnimationPlaying)
             {
-                roadFill += Time.deltaTime * 0.9f;
+                roadFill += Time.deltaTime * 0.15f;
                 roadFill = Mathf.Clamp01(roadFill);
                 if (roadFill < 1)
                     regenerate = true;

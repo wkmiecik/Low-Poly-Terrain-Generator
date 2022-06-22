@@ -8,12 +8,12 @@ public class CinemachineCirclePath : MonoBehaviour
 
     [Range(2, 128)]
     public int points = 16;
-    [Range(1f, 1000f)]
+    [Range(1f, 2000f)]
     public float radius = 5f;
 
     private Waypoint[] m_Waypoints = new Waypoint[0];
 
-    private void OnValidate()
+    private void Update()
     {
         if (!path) path = this.GetComponent<CinemachineSmoothPath>();
         if (!path) return;

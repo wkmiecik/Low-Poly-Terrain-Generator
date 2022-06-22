@@ -78,8 +78,8 @@ public class FoliageSpawner : MonoBehaviour
         //Add trees
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(200 * Time.deltaTime) == 0 && animate) 
-                yield return null;
+            if (i % Mathf.CeilToInt(40 * Time.deltaTime) == 0 && animate)
+                yield return new WaitForSeconds(.02f);
 
             // Doing it every loop so seed is not depending on amount of spawned objects
             var rot = Quaternion.Euler(rng.Range(-5, 5), rng.Range(0, 360), rng.Range(-5, 5));
@@ -147,8 +147,8 @@ public class FoliageSpawner : MonoBehaviour
         //Add grass
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(600 * Time.deltaTime) == 0 && animate)
-                yield return null;
+            if (i % Mathf.CeilToInt(40 * Time.deltaTime) == 0 && animate)
+                yield return new WaitForSeconds(.02f);
 
             // Setting random parameters every loop so seed is not depending on amount of spawned objects
             var scale = new Vector3(rng.Range(70, 80), rng.Range(70, 80), rng.Range(70, 80));
@@ -177,6 +177,8 @@ public class FoliageSpawner : MonoBehaviour
 
                 var rot = Quaternion.FromToRotation(Vector3.up, hit.normal);
 
+                // Only for video
+                //toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
                 if (spawn && animate)
                     toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
                 else if (spawn)
@@ -212,8 +214,8 @@ public class FoliageSpawner : MonoBehaviour
         //Add grass
         for (int i = 0; i < samples.Count; i++)
         {
-            if (i % Mathf.CeilToInt(600 * Time.deltaTime) == 0 && animate)
-                yield return null;
+            if (i % Mathf.CeilToInt(40 * Time.deltaTime) == 0 && animate)
+                yield return new WaitForSeconds(.02f);
 
             // Setting random parameters every loop so seed is not depending on amount of spawned objects
             var scaleF = rng.Range(1.5f, 2);
@@ -243,6 +245,8 @@ public class FoliageSpawner : MonoBehaviour
 
                 var rot = Quaternion.FromToRotation(Vector3.up, hit.normal);
 
+                // Only for video
+                //toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
                 if (spawn && animate)
                     toDelete.Add(Spawn(prefab, hit.point + Vector3.up * -1f, rot, scale, null, animate));
                 else if (spawn)
@@ -269,7 +273,7 @@ public class FoliageSpawner : MonoBehaviour
         if (animate)
         {
             obj.transform.localScale = Vector3.zero;
-            obj.transform.DOScale(scale, .3f);
+            obj.transform.DOScale(scale, .6f);
         }
         else
         {
